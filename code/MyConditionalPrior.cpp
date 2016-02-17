@@ -126,7 +126,7 @@ void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
 
         const int nlines = Data::get_instance().get_nlines();
 
-        vec[0] = -1. + (1. - (-1.))*vec[0]; // Doppler shift
+        vec[0] = 0.5*(vec[0] + 1.); // Doppler shift
 
 
         for (int i=0; i<nlines; i++)
