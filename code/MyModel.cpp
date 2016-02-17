@@ -48,7 +48,7 @@ void MyModel::calculate_mu()
 	double dshift;
 
 	vector<double> mu_temp;
-	mu_temp.assign(0.0, mu.size());
+	mu_temp.assign(mu.size(), 0.);
 
         for(size_t j=0; j<dopplershiftcomponents.size(); j++)
         {
@@ -72,13 +72,13 @@ void MyModel::calculate_mu()
 			}
 	
 		
-		int s;	
+		int s=0;	
                 for(size_t i=0; i<mu.size(); i++)
                 {
 			for (int k=0; k<nlines; k++)
 				{
 			// Integral over the Lorentzian distribution
-					if (sign[i] < pp) 
+					if (sign[k] < pp) 
 						s = -1;
 					else 
 						s = 1;
@@ -115,7 +115,8 @@ void MyModel::from_prior(RNG& rng)
 	background = tan(M_PI*(0.97*rng.rand() - 0.485));
 	background = exp(background);
 	dopplershift.from_prior(rng);
- 
+
+	pp = rng.rand();
 	// this, too belongs to the noise process we're not using 
 //        noise_sigma = exp(log(1E-3) + log(1E3)*rng.rand());
 //        noise_L = exp(log(1E-2*Data::get_instance().get_t_range())
@@ -145,6 +146,11 @@ double MyModel::perturb(RNG& rng)
 //                for(size_t i=0; i<mu.size(); i++)
 //                        mu[i] += background;
         }
+	else if(rng.rand() <= 0.2)
+	{
+		pp += rng.randh();
+		wrap(pp, 0., 1.);
+	}
 	else
 	{
 		logH += dopplershift.perturb(rng);
