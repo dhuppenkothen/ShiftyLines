@@ -62,10 +62,10 @@ void MyModel::calculate_mu()
 	
 		for (int i=0; i<nlines; i++)
 			{
-				line_pos_shifted[i] = line_pos[0] + dshift;
+				line_pos_shifted[i] = line_pos[i] + dshift;
 				amplitude[i] = exp(dopplershiftcomponents[j][i+1]);
 				logq[i] = dopplershiftcomponents[j][i+1+nlines];
-				sign[i] = dopplershiftcomponents[j][i+1+2*nlines]	;		
+				sign[i] = dopplershiftcomponents[j][i+1+2*nlines];		
 				width[i] = line_pos_shifted[i]/exp(logq[i]);
 			}
 	
