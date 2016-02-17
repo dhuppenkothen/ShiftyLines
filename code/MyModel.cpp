@@ -12,8 +12,8 @@ const Data& MyModel::data = Data::get_instance();
 const int nlines = Data::get_instance().get_nlines();
 
 MyModel::MyModel()
-//:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
-:dopplershift(25, 5, false, MyConditionalPrior())
+:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
+//:dopplershift(25, 5, false, MyConditionalPrior())
 ,mu(data.get_f_left().size())
 {
 }
