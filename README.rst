@@ -13,8 +13,7 @@ Prerequisites
 * gcc
 * python3
 * numpy
-
-* `DNest4 <https://github.com/eggplantbren/DNest4>`_.
+* `DNest4 <https://github.com/eggplantbren/DNest4>`_
 
 Copyright
 ---------
