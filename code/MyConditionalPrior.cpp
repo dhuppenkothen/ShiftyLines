@@ -109,12 +109,12 @@ void MyConditionalPrior::from_uniform(std::vector<double>& vec) const
 			if (vec[i+1] < 0.5)
 				vec[i+1] = mu_loga + sigma_loga*log(2.*vec[i+1]);
 			else
-				vec[i+1] = mu_loga + sigma_loga*log(2. - 2.*vec[i+1]);
+				vec[i+1] = mu_loga - sigma_loga*log(2. - 2.*vec[i+1]);
 
 			if (vec[i+1+nlines] < 0.5)
 				vec[i+1+nlines] = mu_logq + sigma_logq*log(2.*vec[i+1+nlines]);
 			else
-				vec[i+1+nlines] = mu_logq + sigma_logq*log(2. - 2.*vec[i+1+nlines]);
+				vec[i+1+nlines] = mu_logq - sigma_logq*log(2. - 2.*vec[i+1+nlines]);
 
 	
 		}
@@ -131,15 +131,15 @@ void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
 
         for (int i=0; i<nlines; i++)
                 {
-                        if (vec[i+1] < 0.5)
+                        if (vec[i+1] < mu_loga)
                         	vec[i+1] = 0.5*exp((vec[i+1] - mu_loga)/sigma_loga);
 			else
-				vec[i+1] = 1. - 0.5*exp((mu_loga - vec[i+1])/sigma_logq);
+				vec[i+1] = 1. - 0.5*exp((mu_loga - vec[i+1])/sigma_loga);
 	
-                        if (vec[i+1+nlines] < 0.5)
-                                vec[i+1+nlines] = 0.5*exp((vec[i+1+nlines] - mu_loga)/sigma_loga);
+                        if (vec[i+1+nlines] < mu_logq)
+                                vec[i+1+nlines] = 0.5*exp((vec[i+1+nlines] - mu_logq)/sigma_logq);
                         else
-                                vec[i+1+nlines] = 1. - 0.5*exp((mu_loga - vec[i+1+nlines])/sigma_logq);
+                                vec[i+1+nlines] = 1. - 0.5*exp((mu_logq - vec[i+1+nlines])/sigma_logq);
 
 
                 }
