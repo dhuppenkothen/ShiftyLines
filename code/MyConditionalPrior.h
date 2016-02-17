@@ -26,6 +26,11 @@ class MyConditionalPrior:public DNest4::ConditionalPrior
 		void print(std::ostream& out) const;
 
 		static const int weight_parameter = 1;
+
+		// Laplacian cdf stuff
+		static int sign(double x);
+		static double laplacian_cdf(double x, double center, double width);
+		static double laplacian_cdf_inverse(double x, double center, double width);
 };
 
 #endif
