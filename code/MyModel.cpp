@@ -37,9 +37,7 @@ void MyModel::calculate_mu()
         const vector<double>& f_right = data.get_f_right();
 
 	// assign constant background to model
-	mu.assign(mu.size(), exp(background));
-
-//	mu.assign(mu.size(), background); //old version
+	mu.assign(mu.size(), background); //old version
  
 	// get amplitudes and widths from the RJObject 
 	const vector< vector<double> >& dopplershiftcomponents = dopplershift.get_components();
