@@ -9,8 +9,11 @@ using namespace DNest4;
 const Data& MyModel::data = Data::get_instance();
 #include <iostream>
 
+const int nlines = Data::get_instance().get_nlines();
+
 MyModel::MyModel()
-:dopplershift(16, 5, false, MyConditionalPrior())
+//:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
+:dopplershift(25, 5, false, MyConditionalPrior())
 ,mu(data.get_f_left().size())
 {
 }
@@ -34,13 +37,18 @@ void MyModel::calculate_mu()
         const vector<double>& f_right = data.get_f_right();
 
 	// assign constant background to model
-	mu.assign(mu.size(), background);
+	mu.assign(mu.size(), exp(background));
+
+//	mu.assign(mu.size(), background); //old version
  
 	// get amplitudes and widths from the RJObject 
 	const vector< vector<double> >& dopplershiftcomponents = dopplershift.get_components();
 
 	vector<double> amplitude, logq, sign, width;
 	double dshift;
+
+	vector<double> mu_temp;
+	mu_temp.assign(0.0, mu.size());
 
         for(size_t j=0; j<dopplershiftcomponents.size(); j++)
         {
@@ -75,7 +83,7 @@ void MyModel::calculate_mu()
 					else 
 						s = 1;
  
-					mu[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
+					mu_temp[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
 								- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
 
 				}
@@ -99,7 +107,7 @@ void MyModel::calculate_mu()
 
         }
 	for (size_t i=0; i<mu.size(); i++)
-		mu[i]  = exp(mu[i]);
+		mu[i]  += exp(mu_temp[i]);
 }
 
 void MyModel::from_prior(RNG& rng)
