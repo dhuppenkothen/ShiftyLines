@@ -1,0 +1,18 @@
+## Designation of columns in posterior_sample.txt
+## Note: If 1 or 2 changes, then the columns all shift appropriately
+0: Constant background level
+1: number of model parameters in RJObject 
+2: number of possible Doppler shifts
+3: mu_loga; mean of the Laplacian prior on the log-amplitude
+4: sigma_loga: width of the Laplacian prior on the log-amplitude
+5: mu_logq: mean of the Laplacian prior on the log-q-factor (centroid/width)
+6: sigma_logq: width of the Laplacian prior on the log-q-factor (centroid/width)
+7: pp: prior on the threshold for emission/absorption line signs
+8: number of redshifts in model
+9: Doppler shift
+10: Doppler shift
+11: Doppler shift
+12: Doppler shift
+13: Doppler shift
+14-
+
