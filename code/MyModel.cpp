@@ -35,6 +35,7 @@ void MyModel::calculate_mu()
 	// get left and right boundaries of the wavelength bins
         const vector<double>& f_left = data.get_f_left();
         const vector<double>& f_right = data.get_f_right();
+        const vector<double>& f_mid = data.get_f_mid();
 
 	// assign constant background to model
 	mu.assign(mu.size(), background); //old version
@@ -80,7 +81,7 @@ void MyModel::calculate_mu()
 					else 
 						s = 1;
  
-					mu_temp[i] += s*amplitude[k]/(width[k]*sqrt(2.*M_PI))*exp(-pow(f_left[i]-line_pos_shifted[k],2)/(2.*pow(width[k],2)));
+					mu_temp[i] += s*amplitude[k]/(width[k]*sqrt(2.*M_PI))*exp(-pow(f_mid[i]-line_pos_shifted[k],2)/(2.*pow(width[k],2)));
 //					mu_temp[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
 //								- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
 
