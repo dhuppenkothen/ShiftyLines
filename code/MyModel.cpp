@@ -150,6 +150,7 @@ double MyModel::perturb(RNG& rng)
 	{
 		pp += rng.randh();
 		wrap(pp, 0., 1.);
+		calculate_mu();
 	}
 	else
 	{
@@ -194,7 +195,7 @@ double MyModel::log_likelihood() const
         double logl = 0.;
 	    for(size_t i=0; i<f_mid.size(); i++)
 		{
-			logl += -0.5*log(2.*M_PI) - 0.5*log(yerr[i]) - pow(y[i]-mu[i], 2)/(2.*pow(yerr[i], 2));
+			logl += -0.5*log(2.*M_PI) - log(yerr[i]) - pow(y[i]-mu[i], 2)/(2.*pow(yerr[i], 2));
  		}
 	return logl;
 }
