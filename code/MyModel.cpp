@@ -12,15 +12,15 @@ const Data& MyModel::data = Data::get_instance();
 const int nlines = Data::get_instance().get_nlines();
 
 MyModel::MyModel()
-:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
-//:dopplershift(25, 5, false, MyConditionalPrior())
+//:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
+:dopplershift(3*nlines+1, 1, true, MyConditionalPrior())
 ,mu(data.get_f_left().size())
 {
 }
 
 double MyModel::gaussian_cdf(double x, double x0, double gamma)
 {
-	return 0.5*(1. + erf((x-x0)/(gamma*pow(2., 0.5))));
+	return 0.5*(1. + erf((x-x0)/(gamma*sqrt(2.))));
 }
 
 void MyModel::calculate_mu()
@@ -81,8 +81,9 @@ void MyModel::calculate_mu()
 					else 
 						s = 1;
  
-					mu_temp[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
-								- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
+					mu_temp[i] += s*amplitude[k]/(width[k]*sqrt(2.*M_PI))*exp(-pow(f_left[i]-line_pos_shifted[k],2)/(2.*pow(width[k],2)));
+//					mu_temp[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
+//								- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
 
 				}
 
@@ -110,8 +111,9 @@ void MyModel::calculate_mu()
 
 void MyModel::from_prior(RNG& rng)
 {
-	background = tan(M_PI*(0.97*rng.rand() - 0.485));
-	background = exp(background);
+	//background = tan(M_PI*(0.97*rng.rand() - 0.485));
+	//background = exp(background);
+	background = 0.09;
 	dopplershift.from_prior(rng);
 
 	pp = rng.rand();
@@ -132,12 +134,12 @@ double MyModel::perturb(RNG& rng)
         {
 //                for(size_t i=0; i<mu.size(); i++)
 //                        mu[i] -= background;
-                background = log(background);
-                background = (atan(background)/M_PI + 0.485)/0.97;
-                background += pow(10., 1.5 - 6.*rng.rand())*rng.randn();
-                background = mod(background, 1.);
-                background = tan(M_PI*(0.97*background - 0.485));
-                background = exp(background);
+                //background = log(background);
+                //background = (atan(background)/M_PI + 0.485)/0.97;
+                //background += pow(10., 1.5 - 6.*rng.rand())*rng.randn();
+                //background = mod(background, 1.);
+                //background = tan(M_PI*(0.97*background - 0.485));
+                //background = exp(background);
 
 			calculate_mu();
 

@@ -17,18 +17,18 @@ void MyConditionalPrior::from_prior(RNG& rng)
 	mu_loga = (5. - (-5.))*rng.rand() + (-5.);
 
 	// sigma_loga is uniformely distributed between 0 and 2
-	sigma_loga = (2.-0.)*rng.rand() + 0.;
+	sigma_loga =  (2.-0.)*rng.rand() + 0.;
 
 
 	// Laplacian prior on the log-q-factor has parameters mu_logq and sigma_logq
 	// mu_logq is uniformely distributed between log(100) and log(1000)
-	mu_logq = (log(1000.) - log(100.))*rng.rand() + log(100.);
+	mu_logq = (log(1000.) - log(300.))*rng.rand() + log(300.);
 
 	// sigma_logq is uniformely distributed between 0 and 0.3
-	sigma_logq = (0.3 - 0.)*rng.rand() + 0.;
+	sigma_logq =  (0.3 - 0.)*rng.rand() + 0.;
 
 	// The parameter p deciding on the threshold for the signs has a Uniform distribution
-	pp = (1. - 0.)*rng.rand() + 0.;
+	pp = (1.0 - 0.)*rng.rand() + 0.;
 
 }
 
@@ -40,7 +40,6 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 
 	if(which == 0)
 	{
-
 		mu_loga += rng.randh()*(5.- (-5.));
                 wrap(mu_loga, -5., 5.);
 	}
@@ -48,12 +47,11 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 	{
                 sigma_loga += rng.randh()*(2.- 0.);
                 wrap(sigma_loga, 0., 2.);
-
 	}
 	if(which == 2)
 	{
-                mu_logq += rng.randh()*(log(1000.) - log(100.));
-                wrap(mu_logq, log(100.), log(1000.));
+                mu_logq += rng.randh()*(log(1000.) - log(300.));
+                wrap(mu_logq, log(300.), log(1000.));
 	}
 	if(which == 3)
 	{
@@ -62,8 +60,8 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 	}
 	if(which == 4)
 	{
-		pp += rng.randh()*1.;
-		wrap(pp, 0., 1.);
+		pp += rng.randh()*1.0;
+		wrap(pp, 0., 1.0);
 	}
 	return logH;
 }
@@ -76,7 +74,7 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 	double loga, logq, sign;
 	const double dshift = vec[0];
 
-	if(dshift < -1. || dshift > 1.)
+	if(dshift < -0.5 || dshift > 0.5)
 		return -1E300;
 
 	double logprior = 0.;
@@ -106,15 +104,19 @@ void MyConditionalPrior::from_uniform(std::vector<double>& vec) const
 	vec[0] = -1. + (1. - (-1.))*vec[0]; // Doppler shift
 	for (int i=0; i<nlines; i++)
 		{
-			if (vec[i+1] < 0.5)
-				vec[i+1] = mu_loga + sigma_loga*log(2.*vec[i+1]);
-			else
-				vec[i+1] = mu_loga - sigma_loga*log(2. - 2.*vec[i+1]);
+//			if (vec[i+1] < 0.5)
+//				vec[i+1] = mu_loga + sigma_loga*log(2.*vec[i+1]);
+//			else
+//				vec[i+1] = mu_loga - sigma_loga*log(2. - 2.*vec[i+1]);
 
-			if (vec[i+1+nlines] < 0.5)
-				vec[i+1+nlines] = mu_logq + sigma_logq*log(2.*vec[i+1+nlines]);
-			else
-				vec[i+1+nlines] = mu_logq - sigma_logq*log(2. - 2.*vec[i+1+nlines]);
+				vec[i+1] = laplacian_cdf_inverse(vec[i+1], mu_loga, sigma_loga);
+	
+//			if (vec[i+1+nlines] < 0.5)
+//				vec[i+1+nlines] = mu_logq + sigma_logq*log(2.*vec[i+1+nlines]);
+//			else
+//				vec[i+1+nlines] = mu_logq - sigma_logq*log(2. - 2.*vec[i+1+nlines]);
+
+				vec[i+1+nlines] = laplacian_cdf_inverse(vec[i+1+nlines], mu_logq, sigma_logq);
 
 	
 		}
@@ -131,15 +133,17 @@ void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
 
         for (int i=0; i<nlines; i++)
                 {
-                        if (vec[i+1] < mu_loga)
-                        	vec[i+1] = 0.5*exp((vec[i+1] - mu_loga)/sigma_loga);
-			else
-				vec[i+1] = 1. - 0.5*exp((mu_loga - vec[i+1])/sigma_loga);
+			vec[i+1] = laplacian_cdf(vec[i+1], mu_loga, sigma_loga);
+			vec[i+1+nlines] = laplacian_cdf(vec[i+1+nlines], mu_logq, sigma_logq);
+//                        if (vec[i+1] < mu_loga)
+//                        	vec[i+1] = 0.5*exp((vec[i+1] - mu_loga)/sigma_loga);
+//			else
+//				vec[i+1] = 1. - 0.5*exp((mu_loga - vec[i+1])/sigma_loga);
 	
-                        if (vec[i+1+nlines] < mu_logq)
-                                vec[i+1+nlines] = 0.5*exp((vec[i+1+nlines] - mu_logq)/sigma_logq);
-                        else
-                                vec[i+1+nlines] = 1. - 0.5*exp((mu_logq - vec[i+1+nlines])/sigma_logq);
+//                        if (vec[i+1+nlines] < mu_logq)
+//                                vec[i+1+nlines] = 0.5*exp((vec[i+1+nlines] - mu_logq)/sigma_logq);
+//                        else
+//                                vec[i+1+nlines] = 1. - 0.5*exp((mu_logq - vec[i+1+nlines])/sigma_logq);
 
 
                 }
