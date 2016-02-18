@@ -55,3 +55,10 @@ def plot_test_noshift2(datadir="../data/"):
     plot_results(data_file, posterior_file, output_root)
     return
 
+def plot_test_shift1(datadir="../data/"):
+    data_file = datadir+"test_shift1.dat"
+    posterior_file = datadir+"test_shift1_posterior_sample.txt"
+    output_root = datadir+"test_shift1"
+    plot_results(data_file, posterior_file, output_root)
+    return
+
