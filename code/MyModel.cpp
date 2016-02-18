@@ -148,6 +148,7 @@ double MyModel::perturb(RNG& rng)
 	{
 		pp += rng.randh();
 		wrap(pp, 0., 1.);
+		calculate_mu();
 	}
 	else
 	{
