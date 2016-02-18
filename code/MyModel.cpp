@@ -45,8 +45,7 @@ void MyModel::calculate_mu()
 	vector<double> amplitude, logq, sign, width;
 	double dshift;
 
-	vector<double> mu_temp;
-	mu_temp.assign(mu.size(), 0.);
+	vector<double> mu_temp(mu.size(), 0.0);
 
         for(size_t j=0; j<dopplershiftcomponents.size(); j++)
         {
@@ -62,7 +61,7 @@ void MyModel::calculate_mu()
 	
 		for (int i=0; i<nlines; i++)
 			{
-				line_pos_shifted[i] = line_pos[i] + dshift;
+				line_pos_shifted[i] = line_pos[i]*(1. + dshift);
 				amplitude[i] = exp(dopplershiftcomponents[j][i+1]);
 				logq[i] = dopplershiftcomponents[j][i+1+nlines];
 				sign[i] = dopplershiftcomponents[j][i+1+2*nlines];		
@@ -106,14 +105,17 @@ void MyModel::calculate_mu()
 
         }
 	for (size_t i=0; i<mu.size(); i++)
-		mu[i]  += exp(mu_temp[i]);
+		{
+			mu[i]  += mu_temp[i];//exp(mu_temp[i]);
+			if (mu[i] < 0.0)
+				mu[i] = 0.0;
+		}
 }
 
 void MyModel::from_prior(RNG& rng)
 {
-	//background = tan(M_PI*(0.97*rng.rand() - 0.485));
-	//background = exp(background);
-	background = 0.09;
+	background = tan(M_PI*(0.97*rng.rand() - 0.485));
+	background = exp(background);
 	dopplershift.from_prior(rng);
 
 	pp = rng.rand();
@@ -134,12 +136,12 @@ double MyModel::perturb(RNG& rng)
         {
 //                for(size_t i=0; i<mu.size(); i++)
 //                        mu[i] -= background;
-                //background = log(background);
-                //background = (atan(background)/M_PI + 0.485)/0.97;
-                //background += pow(10., 1.5 - 6.*rng.rand())*rng.randn();
-                //background = mod(background, 1.);
-                //background = tan(M_PI*(0.97*background - 0.485));
-                //background = exp(background);
+                background = log(background);
+                background = (atan(background)/M_PI + 0.485)/0.97;
+                background += pow(10., 1.5 - 6.*rng.rand())*rng.randn();
+                background = mod(background, 1.);
+                background = tan(M_PI*(0.97*background - 0.485));
+                background = exp(background);
 
 			calculate_mu();
 

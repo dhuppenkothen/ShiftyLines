@@ -74,10 +74,13 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 	double loga, logq, sign;
 	const double dshift = vec[0];
 
-	if(dshift < -0.5 || dshift > 0.5)
-		return -1E300;
+//	if(dshift < -0.1 || dshift > 0.1)
+//		return -1E300;
 
 	double logprior = 0.;
+
+	logprior += -log(1.E-3) - log(1. + pow(dshift, 2)/pow(1.E-3, 2));
+
 	for (int i=0; i<nlines; i++)	
 		{
 			loga = vec[i+1];
@@ -101,7 +104,10 @@ void MyConditionalPrior::from_uniform(std::vector<double>& vec) const
 
         const int nlines = Data::get_instance().get_nlines();
 
-	vec[0] = -1. + (1. - (-1.))*vec[0]; // Doppler shift
+//	vec[0] = -0.1 + (0.1 - (-0.1))*vec[0]; // Doppler shift
+	vec[0] = 1E-3*tan(M_PI*(vec[0] - 0.5));
+
+	
 	for (int i=0; i<nlines; i++)
 		{
 //			if (vec[i+1] < 0.5)
@@ -127,8 +133,9 @@ void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
 {
 
         const int nlines = Data::get_instance().get_nlines();
-
-        vec[0] = 0.5*(vec[0] + 1.); // Doppler shift
+ 
+//	vec[0] = (vec[0] - (-0.1))/(0.1 - (-0.1));
+	vec[0] = (1./M_PI)*atan(vec[0]/1E-3) + 0.5;
 
 
         for (int i=0; i<nlines; i++)
