@@ -105,7 +105,7 @@ Here we list all the priors in the model.
 \toprule
 \bf{Parameter} & \bf{Meaning} & \bf{Probability Distribution} \\ \midrule
 \it{Hyperparameters} && \\ \midrule
-$\mu_{\log{A}}$ & Mean of Laplacian prior distribution for line amplitude $\log{A}$ &  $\mathrm{Uniform}(-5, 5)$  \\
+$\mu_{\log{A}}$ & Mean of Laplacian prior distribution for line amplitude $\log{A}$ &   $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$  \\
 $\sigma_{\log{A}}$ & Standard deviation of Laplacian prior distribution for line amplitude $\log{A}$ & $\mathrm{Uniform}(0,2)$ \\
 $\mu_{\log{q}}$ & Mean of Laplacian prior distribution for the $q$-factor $\log{q}$ & $\mathrm{Uniform}(\log{100}, \log{1000})$  \\
 $\sigma_{\log{q}}$ & Standard deviation of the Laplacian prior distribution for the $q$-factor $\log{q}$ & $\mathrm{Uniform}(\log{0}, \log{0.3})$\\ 

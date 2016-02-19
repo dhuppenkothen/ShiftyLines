@@ -9,8 +9,8 @@ using namespace DNest4;
 // These are the lower and upper bounds on the uniform 
 // prior on the Doppler shift. Change them here if you'd 
 // like the prior to change!
-const double MyConditionalPrior::dmin = -0.05;
-const double MyConditionalPrior::dmax = 0.05;
+const double MyConditionalPrior::dmin = -0.1;
+const double MyConditionalPrior::dmax = 0.1;
 
  
 MyConditionalPrior::MyConditionalPrior()
@@ -20,9 +20,17 @@ MyConditionalPrior::MyConditionalPrior()
 void MyConditionalPrior::from_prior(RNG& rng)
 {
 
+	// NOTE: We want to change the prior on the mean of the Laplacian 
+	// prior on the amplitude to a Cauchy distribution, because our 
+	// amplitudes tend to be smaller than -5
+
+
 	// Laplacian prior on the amplitude has parameters mu_loga and sigma_loga
 	// mu_loga is uniformely distributed between -5 and 5
-	mu_loga = (5. - (-5.))*rng.rand() + (-5.);
+//	mu_loga = (5. - (-5.))*rng.rand() + (-5.);
+        mu_loga = tan(M_PI*(0.97*rng.rand() - 0.485));
+        mu_loga = exp(mu_loga);
+
 
 	// sigma_loga is uniformely distributed between 0 and 2
 	sigma_loga =  (4.-0.)*rng.rand() + 0.;
@@ -48,8 +56,16 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 
 	if(which == 0)
 	{
-		mu_loga += rng.randh()*(5.- (-5.));
-                wrap(mu_loga, -5., 5.);
+//		mu_loga += rng.randh()*(5.- (-5.));
+//                wrap(mu_loga, -5., 5.);
+                mu_loga = log(mu_loga);
+                mu_loga = (atan(mu_loga)/M_PI + 0.485)/0.97;
+                mu_loga += pow(10., 1.5 - 6.*rng.rand())*rng.randn();
+                mu_loga = mod(mu_loga, 1.);
+                mu_loga = tan(M_PI*(0.97*mu_loga - 0.485));
+                mu_loga = exp(mu_loga);
+
+
 	}
 	if(which == 1)
 	{

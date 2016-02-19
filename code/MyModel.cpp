@@ -13,6 +13,7 @@ const int nlines = Data::get_instance().get_nlines();
 MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
 :dopplershift(3*nlines+1, 1, true, MyConditionalPrior())
+,noise_normals(data.get_f_left().size())
 ,mu(data.get_f_left().size())
 {
 }
@@ -88,22 +89,27 @@ void MyModel::calculate_mu()
 
                 } 
 
-	// this is a OU process; we're currently not going to use that, but it might come 
-	// in handy later, so we'll leave it commented out at the appropriate places
-//        vector<double> y(mu.size());
-//        double alpha = exp(-1./noise_L);
- 
-//        for(size_t i=0; i<mu.size(); i++)
-//        {
-//                if(i==0)
-//                        y[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals[i];
-//                else
-//                        y[i] = alpha*y[i-1] + noise_sigma*noise_normals[i];
-//                mu[i] *= exp(y[i]);
-//        }
+	}
 
+        // Compute the OU process
+        vector<double> y(mu.size());
+        double alpha = exp(-1./noise_L);
+        // y[i+1] = a*y[i] + sigma*n[i]
+        // S^2 = a^2 S^2 + sigma^2
+        // S^2 = sigma^2/(1 - a^2)
+        // S = sigma/sqrt(1 - a^2)
 
+        for(size_t i=0; i<mu.size(); i++)
+        {
+                if(i==0)
+                        y[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals[i];
+                else
+                        y[i] = alpha*y[i-1] + noise_sigma*noise_normals[i];
+                mu[i] *= exp(y[i]);
         }
+
+
+        
 	for (size_t i=0; i<mu.size(); i++)
 		{
 			mu[i]  += mu_temp[i];//exp(mu_temp[i]);
@@ -120,9 +126,9 @@ void MyModel::from_prior(RNG& rng)
 
 	pp = rng.rand();
 	// this, too belongs to the noise process we're not using 
-//        noise_sigma = exp(log(1E-3) + log(1E3)*rng.rand());
-//        noise_L = exp(log(1E-2*Data::get_instance().get_t_range())
-//                        + log(1E3)*rng.rand());
+        noise_sigma = exp(log(1E-3) + log(1E3)*rng.rand());
+        noise_L = exp(log(1E-2*Data::get_instance().get_f_range())
+                        + log(1E3)*rng.rand());
 
         calculate_mu();
 
@@ -154,35 +160,35 @@ double MyModel::perturb(RNG& rng)
 		wrap(pp, 0., 1.);
 		calculate_mu();
 	}
-	else
+	else if (rng.rand() <= 0.6)
 	{
 		logH += dopplershift.perturb(rng);
 		calculate_mu();
 	}
-//        else if(rng.rand() <= 0.5)
-//        {
-//                noise_sigma = log(noise_sigma);
-//                noise_sigma += log(1E3)*rng.randh();
-//                wrap(noise_sigma, log(1E-3), log(1.));
-//                noise_sigma = exp(noise_sigma);
+        else if(rng.rand() <= 0.5)
+        {
+                noise_sigma = log(noise_sigma);
+                noise_sigma += log(1E3)*rng.randh();
+                wrap(noise_sigma, log(1E-3), log(1.));
+                noise_sigma = exp(noise_sigma);
 
-//                noise_L = log(noise_L);
-//                noise_L += log(1E3)*rng.randh();
-//                wrap(noise_L, log(1E-2*Data::get_instance().get_t_range()), log(10.*Data::get_instance().get_t_range()));
-//                noise_L = exp(noise_L);
+                noise_L = log(noise_L);
+                noise_L += log(1E3)*rng.randh();
+                wrap(noise_L, log(1E-2*Data::get_instance().get_f_range()), log(10.*Data::get_instance().get_f_range()));
+                noise_L = exp(noise_L);
 
-//                calculate_mu();
-//        }
-//        else
-//        {
-//                int num = exp(log((double)noise_normals.size())*rng.rand());
-//                for(int i=0; i<num; i++)
-//                {
-//                        int k = rng.rand_int(noise_normals.size());
-//                        noise_normals[k] = rng.randn();
-//                }
-//                calculate_mu();
-//        }
+                calculate_mu();
+        }
+        else
+        {
+                int num = exp(log((double)noise_normals.size())*rng.rand());
+                for(int i=0; i<num; i++)
+                {
+                        int k = rng.rand_int(noise_normals.size());
+                        noise_normals[k] = rng.randn();
+                }
+                calculate_mu();
+        }
 
 
 	return logH;

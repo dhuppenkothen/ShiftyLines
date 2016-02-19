@@ -20,9 +20,9 @@ class MyModel
 //		const vector<double>& line_pos;  
 		// The Lorentzians
 		DNest4::RJObject<MyConditionalPrior> dopplershift;
-		// Extra white noise on teh Poisson rate
-//		std::vector<double> noise_normals;
-//		double noise_sigma, noise_L;
+		// Extra white noise on the flux
+		std::vector<long double> noise_normals;
+		double noise_sigma, noise_L;
 
 		// Poisson mean
 		std::vector<long double> mu;
