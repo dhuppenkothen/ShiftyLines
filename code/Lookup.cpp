@@ -4,7 +4,7 @@
 
 using namespace std;
 
-Lookup Lookup::instance(101, -10., 10.);
+Lookup Lookup::instance(1001, -10., 10.);
 
 Lookup::Lookup(size_t num, double x_min, double x_max)
 :num(num)
