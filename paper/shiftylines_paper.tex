@@ -32,7 +32,7 @@
 \newcommand{\dd}{\mathrm{d}}
 \newcommand{\counts}{y}
 \newcommand{\pars}{\theta}
-\newcommand{\mean}{\lambda}
+\newcommand{\mean}{m}
 \newcommand{\likelihood}{{\mathcal L}}
 \newcommand{\Poisson}{{\mathcal P}}
 \newcommand{\Uniform}{{\mathcal U}}
@@ -69,7 +69,15 @@ Accretion disks and winds and stuff.
 
 \section{Method}
 
-Each line $i$ is modelled as a Gaussian with location and scale parameters $\mu_i$ and $\sigma_i$, respectively.
+Each line $k$ is modelled as a Gaussian with location and scale parameters $\mu_k$ and $\sigma_k$, respectively. We compute the line flux in each wavelength bin by integrating the flux within the bin from the lower to the upper bin edge:
+
+\begin{eqnarray}
+\mean_j = \sum_{k=1}^{K}{\int^{\lambda_\mathrm{high}}_{\lambda_{\mathrm{low}}}{\frac{A_k}{\sigma_k\sqrt{2\pi}} \exp{(-(\lambda-\mu_k)/{2\sigma_k^2})}}}
+\end{eqnarray}
+
+We use a OU process for the background [ADD DETAILS].
+
+ 
 
 
 \subsection{Assumptions}
@@ -91,17 +99,16 @@ Here we list all the priors in the model.
 \toprule
 \bf{Parameter} & \bf{Meaning} & \bf{Probability Distribution} \\ \midrule
 \it{Hyperparameters} && \\ \midrule
-$\mu_\log{A}$ & Mean of Laplacian prior distribution for line amplitude $\log{A}$ &  $\mathrm{Uniform}(-5, 5)$  \\
-$\sigma_\log{A}$ & Standard deviation of Laplacian prior distribution for line amplitude $\log{A}$ & $\mathrm{Uniform}(0,2)$ \\
-$\mu_\log{q}$ & Mean of Laplacian prior distribution for the $q$-factor $\log{q}$ & $\mathrm{Uniform}(\log(100), \log(1000))$  \\
-$\sigma_\log{q}$ & Standard deviation of the Laplacian prior distribution for the $q$-factor $\log{q}$ & $\mathrm{Uniform}(\log(0), \log(0.3))$\\ 
+$\mu_{\log{A}}$ & Mean of Laplacian prior distribution for line amplitude $\log{A}$ &  $\mathrm{Uniform}(-5, 5)$  \\
+$\sigma_{\log{A}}$ & Standard deviation of Laplacian prior distribution for line amplitude $\log{A}$ & $\mathrm{Uniform}(0,2)$ \\
+$\mu_{\log{q}}$ & Mean of Laplacian prior distribution for the $q$-factor $\log{q}$ & $\mathrm{Uniform}(\log{100}, \log{1000})$  \\
+$\sigma_{\log{q}}$ & Standard deviation of the Laplacian prior distribution for the $q$-factor $\log{q}$ & $\mathrm{Uniform}(\log{0}, \log{0.3})$\\ 
 \midrule
 \it{Individual Spectral Line Parameters} && \\ \midrule
-
 $\log{A_i}$ & logarithm of the amplitude of line $i$ & $\mathrm{Laplacian}(\mu_A \sigma_A)$ \\
-$\log{q_i}$ & logarithm of $q_i = \lambda_\mathrm{line}_i/\sigma_\mathrm{line}_i$ & $\mathrm{Laplacian}(\mu_q, \sigma_q)$ \\
-$\log{\counts}_\mathrm{bkg}$ & logarithm of the background flux & $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$ \\
-$d = v/c$ $ Doppler shift $d$ parametrized as a function of velocity $v$ and speed of light $c$ & $\mathrm{Cauchy\, distribution}(0, 0.001)$
+$\log{q_i}$ & logarithm of $q_i = \lambda_{\mathrm{line}_{i}}/\sigma_{\mathrm{line}_{i}}$ & $\mathrm{Laplacian}(\mu_q, \sigma_q)$ \\
+$\log{\counts}_{\mathrm{bkg}}$ & logarithm of the background flux & $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$ \\
+$d = v/c$ & Doppler shift $d$ parametrized as a function of velocity $v$ and speed of light $c$ & $\mathrm{Uniform}(-0.1, 0.1)$ \\
 $N$ & Number of possible Doppler shifts & $\mathrm{Uniform}(0,5)$  \\\bottomrule
 \end{tabularx}
    \begin{tablenotes}
