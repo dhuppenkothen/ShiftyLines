@@ -5,6 +5,14 @@
 
 using namespace DNest4;
  
+
+// These are the lower and upper bounds on the uniform 
+// prior on the Doppler shift. Change them here if you'd 
+// like the prior to change!
+const double MyConditionalPrior::dmin = -0.1;
+const double MyConditionalPrior::dmax = 0.1;
+
+ 
 MyConditionalPrior::MyConditionalPrior()
 {
 }
@@ -74,12 +82,12 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 	double loga, logq, sign;
 	const double dshift = vec[0];
 
-//	if(dshift < -0.1 || dshift > 0.1)
-//		return -1E300;
+	if(dshift < dmin || dshift > dmax)
+		return -1E300;
 
 	double logprior = 0.;
 
-	logprior += -log(0.01) - log(1. + pow(dshift, 2)/pow(0.01, 2));
+//	logprior += -log(0.01) - log(1. + pow(dshift, 2)/pow(0.01, 2));
 
 	for (int i=0; i<nlines; i++)	
 		{
@@ -104,8 +112,8 @@ void MyConditionalPrior::from_uniform(std::vector<double>& vec) const
 
         const int nlines = Data::get_instance().get_nlines();
 
-//	vec[0] = -0.1 + (0.1 - (-0.1))*vec[0]; // Doppler shift
-	vec[0] = 0.01*tan(M_PI*(vec[0] - 0.5));
+	vec[0] = dmin + (dmax - dmin)*vec[0]; // Doppler shift
+//	vec[0] = 0.01*tan(M_PI*(vec[0] - 0.5));
 
 	
 	for (int i=0; i<nlines; i++)
@@ -134,8 +142,8 @@ void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
 
         const int nlines = Data::get_instance().get_nlines();
  
-//	vec[0] = (vec[0] - (-0.1))/(0.1 - (-0.1));
-	vec[0] = (1./M_PI)*atan(vec[0]/0.01) + 0.5;
+	vec[0] = (vec[0] - dmin)/(dmax - dmin);
+//	vec[0] = (1./M_PI)*atan(vec[0]/0.01) + 0.5;
 
 
         for (int i=0; i<nlines; i++)

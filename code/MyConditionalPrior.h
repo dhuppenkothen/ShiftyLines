@@ -11,6 +11,7 @@ class MyConditionalPrior:public DNest4::ConditionalPrior
 		double mu_loga, sigma_loga, mu_logq, sigma_logq;
 		double pp;
 
+		static const double dmin, dmax;
 
 		double perturb_hyperparameters(DNest4::RNG& rng);
 
