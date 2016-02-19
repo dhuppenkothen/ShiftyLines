@@ -9,8 +9,8 @@ using namespace DNest4;
 // These are the lower and upper bounds on the uniform 
 // prior on the Doppler shift. Change them here if you'd 
 // like the prior to change!
-const double MyConditionalPrior::dmin = -0.1;
-const double MyConditionalPrior::dmax = 0.1;
+const double MyConditionalPrior::dmin = -0.05;
+const double MyConditionalPrior::dmax = 0.05;
 
  
 MyConditionalPrior::MyConditionalPrior()
@@ -25,7 +25,7 @@ void MyConditionalPrior::from_prior(RNG& rng)
 	mu_loga = (5. - (-5.))*rng.rand() + (-5.);
 
 	// sigma_loga is uniformely distributed between 0 and 2
-	sigma_loga =  (2.-0.)*rng.rand() + 0.;
+	sigma_loga =  (4.-0.)*rng.rand() + 0.;
 
 
 	// Laplacian prior on the log-q-factor has parameters mu_logq and sigma_logq
@@ -53,8 +53,8 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 	}
 	if(which == 1)
 	{
-                sigma_loga += rng.randh()*(2.- 0.);
-                wrap(sigma_loga, 0., 2.);
+                sigma_loga += rng.randh()*(4.- 0.);
+                wrap(sigma_loga, 0., 4.);
 	}
 	if(which == 2)
 	{
