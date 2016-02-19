@@ -1,0 +1,11 @@
+__pycache__
+sample.txt
+levels.txt
+sample_info.txt
+weights.txt
+posterior_sample.txt
+main
+shiftylines_paper.aux
+shiftylines_paper.log
+shiftylines_paper.out
+shiftylines_paper.pdf
