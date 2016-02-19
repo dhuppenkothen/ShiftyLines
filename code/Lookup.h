@@ -25,7 +25,8 @@ class Lookup
 		static Lookup instance;
 
 	public:
-		double erf(double x);
+		double evaluate_erf(double x);
+		static double erf(double x);
 
 };
 

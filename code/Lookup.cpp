@@ -17,10 +17,10 @@ Lookup::Lookup(size_t num, double x_min, double x_max)
 	assert(x_max > x_min);
 
 	for(size_t i=0; i<num; ++i)
-		evaluations[i] = erf(x_min + i*dx);
+		evaluations[i] = std::erf(x_min + i*dx);
 }
 
-double Lookup::erf(double x)
+double Lookup::evaluate_erf(double x)
 {
 	if(x < Lookup::x_min)
 		return -1.;
@@ -29,6 +29,12 @@ double Lookup::erf(double x)
 
 	size_t index = static_cast<size_t>((x - x_min)*one_over_dx);
 	double lambda = (x - (x_min + index*dx))*one_over_dx;
+
 	return (1. - lambda)*evaluations[index] + lambda*evaluations[index+1];
+}
+
+double Lookup::erf(double x)
+{
+	return instance.evaluate_erf(x);
 }
 
