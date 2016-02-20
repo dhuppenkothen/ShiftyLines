@@ -138,59 +138,68 @@ double MyModel::perturb(RNG& rng)
 {
 	double logH = 0.;
 
-        if(rng.rand() <= 0.2)
-        {
-//                for(size_t i=0; i<mu.size(); i++)
-//                        mu[i] -= background;
-                background = log(background);
-                background = (atan(background)/M_PI + 0.485)/0.97;
-                background += pow(10., 1.5 - 6.*rng.rand())*rng.randn();
-                background = mod(background, 1.);
-                background = tan(M_PI*(0.97*background - 0.485));
-                background = exp(background);
+	int which;
 
-			calculate_mu();
-
-//                for(size_t i=0; i<mu.size(); i++)
-//                        mu[i] += background;
-        }
-	else if(rng.rand() <= 0.2)
+	// A 50-50 decision to perturb a 'multivariate' thing or a 'univariate' thing
+	if(rng.rand() <= 0.5)
 	{
-		pp += rng.randh();
-		wrap(pp, 0., 1.);
-		calculate_mu();
+		which = rng.rand_int(2);
+
+		if(which == 0)	// Proposal for the RJObject describing the lines
+			logH += dopplershift.perturb(rng);
+		else			// Proposal for normals for the OU process
+		{
+			if(rng.rand() <= 0.5)	// Propose to move only one
+			{
+				which = rng.rand_int(noise_normals.size());
+				logH -= -0.5*pow(noise_normals[which], 2);
+				noise_normals[which] += rng.randh();
+				logH += -0.5*pow(noise_normals[which], 2);
+			}
+			else					// AR(1) proposal
+			{
+				double theta = 2.*M_PI*pow(10., -6.*rng.rand());
+				double cos_theta = cos(theta);
+				double sin_theta = sin(theta);
+				for(double& n: noise_normals)
+					n = cos_theta*n + sin_theta*rng.randn();
+			}
+		}
 	}
-	else if (rng.rand() <= 0.6)
+	else
 	{
-		logH += dopplershift.perturb(rng);
-		calculate_mu();
+		which = rng.rand_int(4);
+		if(which == 0)
+		{
+			background = log(background);
+			background = (atan(background)/M_PI + 0.485)/0.97;
+			background += rng.randh();
+			background = mod(background, 1.);
+			background = tan(M_PI*(0.97*background - 0.485));
+			background = exp(background);
+		}
+		else if(which == 1)
+		{
+			pp += rng.randh();
+			wrap(pp, 0., 1.);
+		}
+		else if(which == 2)
+		{
+			noise_sigma = log(noise_sigma);
+			noise_sigma += log(1E3)*rng.randh();
+			wrap(noise_sigma, log(1E-3), log(1.));
+			noise_sigma = exp(noise_sigma);
+		}
+		else
+		{
+			noise_L = log(noise_L);
+			noise_L += log(1E3)*rng.randh();
+			wrap(noise_L, log(1E-2*Data::get_instance().get_f_range()), log(10.*Data::get_instance().get_f_range()));
+			noise_L = exp(noise_L);
+		}
 	}
-        else if(rng.rand() <= 0.5)
-        {
-                noise_sigma = log(noise_sigma);
-                noise_sigma += log(1E3)*rng.randh();
-                wrap(noise_sigma, log(1E-3), log(1.));
-                noise_sigma = exp(noise_sigma);
 
-                noise_L = log(noise_L);
-                noise_L += log(1E3)*rng.randh();
-                wrap(noise_L, log(1E-2*Data::get_instance().get_f_range()), log(10.*Data::get_instance().get_f_range()));
-                noise_L = exp(noise_L);
-
-                calculate_mu();
-        }
-        else
-        {
-                int num = exp(log((double)noise_normals.size())*rng.rand());
-                for(int i=0; i<num; i++)
-                {
-                        int k = rng.rand_int(noise_normals.size());
-                        noise_normals[k] = rng.randn();
-                }
-                calculate_mu();
-        }
-
-
+	calculate_mu();
 	return logH;
 }
 
@@ -214,7 +223,7 @@ void MyModel::print(std::ostream& out) const
         dopplershift.print(out);
 
 	for(size_t i=0; i<mu.size(); i++)
-                out<<mu[i]<<' ';
+		out<<mu[i]<<' ';
 
 }
 

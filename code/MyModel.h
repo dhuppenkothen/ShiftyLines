@@ -21,7 +21,7 @@ class MyModel
 		// The Lorentzians
 		DNest4::RJObject<MyConditionalPrior> dopplershift;
 		// Extra white noise on the flux
-		std::vector<long double> noise_normals;
+		std::vector<double> noise_normals;
 		double noise_sigma, noise_L;
 
 		// Poisson mean
