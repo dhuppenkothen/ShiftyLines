@@ -77,7 +77,7 @@ Each line $k$ is modelled as a Gaussian with location and scale parameters $\mu_
 
 \begin{eqnarray}
 \mean_j & = &  \sum_{k=1}^{K}{\int^{\lambda_{j,\mathrm{high}}}_{\lambda_{j, \mathrm{low}}}{\frac{A_k}{\sigma_k\sqrt{2\pi}} \exp{(-(\lambda-\mu_k)/{2\sigma_k^2})}}} \\ \nonumber
-& = & A_k 0.5 \left[ \erf{\left( \frac{\lambda_{j,\mathrm{high}} - \mu_k}{\sqrt({2}\sigma_k}\right)} - \erf{\left( \frac{\lambda_{j, \mathrm{low}} - \mu_k}{\sqrt({2}\sigma_k}\right)} \right] \; ,
+& = & \frac{1}{2}\sum_{k=1}^{K} A_k\left[ \erf{\left( \frac{\lambda_{j,\mathrm{high}} - \mu_k}{\sigma_k\sqrt{2}}\right)} - \erf{\left( \frac{\lambda_{j, \mathrm{low}} - \mu_k}{\sigma_k\sqrt{2}}\right)} \right] \; ,
 \end{eqnarray}
 
 \noindent where $j$ is the index of a wavelength bin and $\erf$ defines the error function. 
@@ -150,7 +150,7 @@ This is a problem that makes all sampling algorithms fail, and requires careful 
 
 
 
-\paragraph{acknowledgements}
+\paragraph{Acknowledgements}
 DH was supported by the Moore-Sloan Data Science Environment at NYU.
 BJB was supported by a Marsden Fast-Start grant from the Royal Society of
 New Zealand.
