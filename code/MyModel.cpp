@@ -8,7 +8,7 @@ using namespace std;
 using namespace DNest4;
 
 const Data& MyModel::data = Data::get_instance();
-const int nlines = Data::get_instance().get_nlines();
+const int& nlines = Data::get_instance().get_nlines();
 //const std::vector<double> line_pos = Data::get_instance().get_line_pos();
 
 MyModel::MyModel()
@@ -28,7 +28,6 @@ void MyModel::calculate_mu()
 { 
 	// define line positions
 	const vector<double>& line_pos = data.get_line_pos();
-	const int nlines = data.get_nlines();
 
 	// declare shifted line positions
 	vector<double> line_pos_shifted;

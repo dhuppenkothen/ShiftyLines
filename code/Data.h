@@ -33,7 +33,7 @@ class Data
 		double get_f_min() const { return f_min; }
 		double get_f_max() const { return f_max; }
 		double get_f_range() const { return f_range; }
-		int get_nlines() const {return nlines; }
+		const int& get_nlines() const { return nlines; }
 		
 	// Singleton
 	private:
