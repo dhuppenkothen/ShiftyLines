@@ -9,8 +9,8 @@ class Data
 		std::vector<double> f_left, f_right, y, yerr;
 		std::vector<double> f_mid, df;
 
-		const std::vector<double> line_pos;
-		const int nlines;
+		std::vector<double> lines;
+		int nlines;
 
 		// Some useful summaries
 		double f_min, f_max, f_range;
@@ -18,6 +18,7 @@ class Data
 	public:
 		Data();
 		void load(const char* filename);
+		void load_lines(const char* filename);
 
 		// Getters
 		const std::vector<double>& get_f_mid() const { return f_mid; }
@@ -26,7 +27,7 @@ class Data
 		const std::vector<double>& get_f_right() const { return f_right; }
 		const std::vector<double>& get_y() const { return y; }
 		const std::vector<double>& get_yerr() const { return yerr; }
-		const std::vector<double>& get_line_pos() const { return line_pos; }
+		const std::vector<double>& get_line_pos() const { return lines; }
 
 
 		double get_f_min() const { return f_min; }

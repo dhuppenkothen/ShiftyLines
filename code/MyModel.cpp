@@ -9,10 +9,11 @@ using namespace DNest4;
 
 const Data& MyModel::data = Data::get_instance();
 const int nlines = Data::get_instance().get_nlines();
+//const std::vector<double> line_pos = Data::get_instance().get_line_pos();
 
 MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
-:dopplershift(3*nlines+1, 1, true, MyConditionalPrior())
+:dopplershift(3*nlines+1, 3, false, MyConditionalPrior())
 ,noise_normals(data.get_f_left().size())
 ,mu(data.get_f_left().size())
 {

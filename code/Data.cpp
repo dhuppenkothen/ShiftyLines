@@ -8,14 +8,35 @@ using namespace std;
 Data Data::instance;
 
 Data::Data()
-:line_pos {6.64794778337, 6.18222706825,
-                    6.71993761152, 6.78432363818,
-                    6.85605388882, 6.9281555301,
-                    6.99681113087, 7.05787012547}
-,nlines(line_pos.size())
 {
 
 }
+
+void Data::load_lines(const char* filename)
+{
+        fstream fin(filename, ios::in);
+        if(!fin)
+        {
+                cerr<<"# Failed to open file "<<filename<<"."<<endl;
+                return;
+        }
+
+	lines.clear();
+
+        double temp1;
+        while(fin>>temp1)
+                lines.push_back(temp1);
+
+	nlines = lines.size();
+
+        fin.close();
+        cout<<"# Found "<<lines.size()<<" line positions in "<<filename<<"."<<endl;
+	
+	
+
+}
+
+
 
 void Data::load(const char* filename)
 {
