@@ -9,3 +9,7 @@ shiftylines_paper.aux
 shiftylines_paper.log
 shiftylines_paper.out
 shiftylines_paper.pdf
+code/.swp
+data/8525_nodip_0.dat
+data/8525_nodip_cut.txt
+demos/.ipynb_checkpoints/
