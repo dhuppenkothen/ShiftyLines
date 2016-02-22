@@ -95,7 +95,7 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 
 	const int nlines = Data::get_instance().get_nlines();
 
-	double loga, logq, sign;
+	double loga, logq, the_sign;
 	const double dshift = vec[0];
 
 	if(dshift < dmin || dshift > dmax)
@@ -109,9 +109,9 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 		{
 			loga = vec[i+1];
 			logq = vec[i+1+nlines];
-			sign = vec[i+1+2*nlines];
+			the_sign = vec[i+1+2*nlines];
 	
-			if(sign < 0.0 || sign > 1.)
+			if(the_sign < 0.0 || the_sign > 1.)
 				return -1E300;	
 		
 			logprior += -log(2.*sigma_loga) - std::abs(loga - mu_loga)/sigma_loga;
