@@ -13,7 +13,7 @@ const int& nlines = Data::get_instance().get_nlines();
 
 MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
-:dopplershift(3*nlines+1, 3, false, MyConditionalPrior())
+:dopplershift(3*nlines+1, 1, true, MyConditionalPrior())
 ,noise_normals(data.get_f_left().size())
 ,mu(data.get_f_left().size())
 {
@@ -219,7 +219,7 @@ double MyModel::log_likelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
-        out<<background<<' ';
+        out<<background<<' '<<noise_L<<' '<<noise_sigma<<' ';
         dopplershift.print(out);
 
 	for(size_t i=0; i<mu.size(); i++)
