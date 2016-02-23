@@ -15,9 +15,8 @@ class MyModel
 		static const Data& data;
 
 		// A flat background level
-		double background, pp;
+		double background;
 
-//		const vector<double>& line_pos;  
 		// The Lorentzians
 		DNest4::RJObject<MyConditionalPrior> dopplershift;
 		// Extra white noise on the flux

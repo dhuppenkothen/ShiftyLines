@@ -14,12 +14,12 @@ Data::Data()
 
 void Data::load_lines(const char* filename)
 {
-        fstream fin(filename, ios::in);
-        if(!fin)
-        {
-                cerr<<"# Failed to open file "<<filename<<"."<<endl;
-                return;
-        }
+	fstream fin(filename, ios::in);
+	if(!fin)
+	{
+		cerr<<"# Failed to open file "<<filename<<"."<<endl;
+		exit(1);
+	}
 
 	lines.clear();
 
@@ -44,7 +44,7 @@ void Data::load(const char* filename)
 	if(!fin)
 	{
 		cerr<<"# Failed to open file "<<filename<<"."<<endl;
-		return;
+		exit(1);
 	}
 
 	f_left.clear();
