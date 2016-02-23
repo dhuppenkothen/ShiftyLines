@@ -26,6 +26,9 @@ class MyConditionalPrior:public DNest4::ConditionalPrior
 
 		void print(std::ostream& out) const;
 
+		// A getter
+		double get_pp() const { return pp; }
+
 		static const int weight_parameter = 1;
 
 		// Laplacian cdf stuff

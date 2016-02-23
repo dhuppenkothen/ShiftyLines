@@ -76,7 +76,7 @@ void MyModel::calculate_mu()
 			for (int k=0; k<nlines; k++)
 				{
 			// Integral over the Lorentzian distribution
-					if (sign[k] < pp) 
+					if (sign[k] < dopplershift.get_conditional_prior().get_pp()) 
 						s = -1;
 					else 
 						s = 1;
@@ -124,10 +124,9 @@ void MyModel::from_prior(RNG& rng)
 	background = exp(background);
 	dopplershift.from_prior(rng);
 
-	pp = rng.rand();
 	// this, too belongs to the noise process we're not using 
-        noise_sigma = exp(log(1E-3) + log(1E3)*rng.rand());
-        noise_L = exp(log(1E-2*Data::get_instance().get_f_range())
+	noise_sigma = exp(log(1E-3) + log(1E3)*rng.rand());
+	noise_L = exp(log(1E-2*Data::get_instance().get_f_range())
                         + log(1E3)*rng.rand());
 
         calculate_mu();
@@ -168,7 +167,7 @@ double MyModel::perturb(RNG& rng)
 	}
 	else
 	{
-		which = rng.rand_int(4);
+		which = rng.rand_int(3);
 		if(which == 0)
 		{
 			background = log(background);
@@ -178,12 +177,7 @@ double MyModel::perturb(RNG& rng)
 			background = tan(M_PI*(0.97*background - 0.485));
 			background = exp(background);
 		}
-		else if(which == 1)
-		{
-			pp += rng.randh();
-			wrap(pp, 0., 1.);
-		}
-		else if(which == 2)
+		if(which == 1)
 		{
 			noise_sigma = log(noise_sigma);
 			noise_sigma += log(1E3)*rng.randh();
