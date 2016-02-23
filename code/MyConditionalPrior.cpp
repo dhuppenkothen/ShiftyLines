@@ -29,8 +29,6 @@ void MyConditionalPrior::from_prior(RNG& rng)
 	// mu_loga is uniformely distributed between -5 and 5
 //	mu_loga = (5. - (-5.))*rng.rand() + (-5.);
         mu_loga = tan(M_PI*(0.97*rng.rand() - 0.485));
-        mu_loga = exp(mu_loga);
-
 
 	// sigma_loga is uniformely distributed between 0 and 2
 	sigma_loga =  (4.-0.)*rng.rand() + 0.;
@@ -63,12 +61,11 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 	{
 //		mu_loga += rng.randh()*(5.- (-5.));
 //                wrap(mu_loga, -5., 5.);
-                mu_loga = log(mu_loga);
                 mu_loga = (atan(mu_loga)/M_PI + 0.485)/0.97;
                 mu_loga += pow(10., 1.5 - 6.*rng.rand())*rng.randn();
                 mu_loga = mod(mu_loga, 1.);
                 mu_loga = tan(M_PI*(0.97*mu_loga - 0.485));
-                mu_loga = exp(mu_loga);
+      
 
 
 	}
