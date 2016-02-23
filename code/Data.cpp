@@ -83,6 +83,7 @@ void Data::compute_summaries()
 		f_mid[i] = f_left[i] + 0.5*df[i];
 	}
 
+	min_df = *min_element(df.begin(), df.end());
 }
 
 

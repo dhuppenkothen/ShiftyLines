@@ -13,7 +13,7 @@ class Data
 		int nlines;
 
 		// Some useful summaries
-		double f_min, f_max, f_range;
+		double f_min, f_max, f_range, min_df;
 		void compute_summaries();
 	public:
 		Data();
@@ -33,6 +33,7 @@ class Data
 		double get_f_min() const { return f_min; }
 		double get_f_max() const { return f_max; }
 		double get_f_range() const { return f_range; }
+		double get_min_df() const { return min_df; }
 		const int& get_nlines() const { return nlines; }
 		
 	// Singleton

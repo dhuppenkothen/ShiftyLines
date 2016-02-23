@@ -38,10 +38,13 @@ void MyConditionalPrior::from_prior(RNG& rng)
 
 	// Laplacian prior on the log-q-factor has parameters mu_logq and sigma_logq
 	// mu_logq is uniformely distributed between log(100) and log(1000)
-	mu_logq = (log(1000.) - log(300.))*rng.rand() + log(300.);
-
+	//mu_logq = (log(1000.) - log(300.))*rng.rand() + log(300.);
+	double min_df = Data::get_instance().get_min_df(); 
+	double f_range = Data::get_instance().get_f_range() ;
+	mu_logwidth = (log(f_range/10.) - log(min_df/5.0))*rng.rand() + log(min_df/5.0);
+  
 	// sigma_logq is uniformely distributed between 0 and 0.3
-	sigma_logq =  (0.3 - 0.)*rng.rand() + 0.;
+	sigma_logwidth =  (0.3 - 0.)*rng.rand() + 0.;
 
 	// The parameter p deciding on the threshold for the signs has a Uniform distribution
 	pp = (1.0 - 0.)*rng.rand() + 0.;
@@ -51,6 +54,8 @@ void MyConditionalPrior::from_prior(RNG& rng)
 double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 {
 	double logH = 0.;
+        double min_df = Data::get_instance().get_min_df();
+        double f_range = Data::get_instance().get_f_range() ;
 
 	int which = rng.rand_int(5);
 
@@ -74,13 +79,13 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 	}
 	if(which == 2)
 	{
-                mu_logq += rng.randh()*(log(1000.) - log(300.));
-                wrap(mu_logq, log(300.), log(1000.));
+                mu_logwidth += rng.randh()*(log(f_range/10.) - log(min_df/5.0));
+                wrap(mu_logwidth, log(min_df/5.0), log(f_range/10.));
 	}
 	if(which == 3)
 	{
-		sigma_logq += rng.randh()*(0.3 - 0.0);
-		wrap(sigma_logq, 0.0, 0.3);
+		sigma_logwidth += rng.randh()*(0.3 - 0.0);
+		wrap(sigma_logwidth, 0.0, 0.3);
 	}
 	if(which == 4)
 	{
@@ -95,7 +100,7 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 
 	const int nlines = Data::get_instance().get_nlines();
 
-	double loga, logq, the_sign;
+	double loga, logwidth, the_sign;
 	const double dshift = vec[0];
 
 	if(dshift < dmin || dshift > dmax)
@@ -108,14 +113,14 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 	for (int i=0; i<nlines; i++)	
 		{
 			loga = vec[i+1];
-			logq = vec[i+1+nlines];
+			logwidth = vec[i+1+nlines];
 			the_sign = vec[i+1+2*nlines];
 	
 			if(the_sign < 0.0 || the_sign > 1.)
 				return -1E300;	
 		
 			logprior += -log(2.*sigma_loga) - std::abs(loga - mu_loga)/sigma_loga;
-			logprior += -log(2.*sigma_logq) - std::abs(logq - mu_logq)/sigma_logq;
+			logprior += -log(2.*sigma_logwidth) - std::abs(logwidth - mu_logwidth)/sigma_logwidth;
 
 		}
 
@@ -146,7 +151,7 @@ void MyConditionalPrior::from_uniform(std::vector<double>& vec) const
 //			else
 //				vec[i+1+nlines] = mu_logq - sigma_logq*log(2. - 2.*vec[i+1+nlines]);
 
-				vec[i+1+nlines] = laplacian_cdf_inverse(vec[i+1+nlines], mu_logq, sigma_logq);
+				vec[i+1+nlines] = laplacian_cdf_inverse(vec[i+1+nlines], mu_logwidth, sigma_logwidth);
 
 	
 		}
@@ -165,7 +170,7 @@ void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
         for (int i=0; i<nlines; i++)
                 {
 			vec[i+1] = laplacian_cdf(vec[i+1], mu_loga, sigma_loga);
-			vec[i+1+nlines] = laplacian_cdf(vec[i+1+nlines], mu_logq, sigma_logq);
+			vec[i+1+nlines] = laplacian_cdf(vec[i+1+nlines], mu_logwidth, sigma_logwidth);
 //                        if (vec[i+1] < mu_loga)
 //                        	vec[i+1] = 0.5*exp((vec[i+1] - mu_loga)/sigma_loga);
 //			else
@@ -183,7 +188,7 @@ void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
 
 void MyConditionalPrior::print(std::ostream& out) const
 {
-	out<<mu_loga<<' '<<sigma_loga<<' '<<mu_logq<<' '<<sigma_logq<<' '<<pp<<' ';
+	out<<mu_loga<<' '<<sigma_loga<<' '<<mu_logwidth<<' '<<sigma_logwidth<<' '<<pp<<' ';
 }
 
 

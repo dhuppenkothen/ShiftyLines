@@ -83,7 +83,9 @@ spectral data), rather than prioritizing computational speed.
 
 \section{Method}
 
-High-resolution spectral data consists of a continuum with a set of spectral lines superposed. A priori, we know the rest frame wavelengths of the most common lines, but neither the amplitudes nor widths of these lines is known, thus they should be part of the inference process. At the same time, we wish to infer the both the potential 
+High-resolution spectral data consists of a continuum with a set of spectral lines superposed. A priori, we (approximately) know the rest frame wavelengths of the most common lines, but neither the amplitudes nor widths of these lines is known, thus they should be part of the inference process. Strictly speaking, because rest frame line positions in the spectrum are based on laboratory measurements, they have an uncertainty associated with them, too, but we currently do not take this uncertainty into account in the model.
+
+ The objective, given a spectrum and a set of rest frame wavelengths of spectral lines, is to infer the amplitudes and widths of all (potential) lines at the same time as the one or several Doppler shifts affecting the centroid wavelengths of the spectral lines. Not all lines may be present in the data, but we consciously avoid performing model selection tasks for each individual line. Instead, we rephrase the problem as a parameter estimation task only, where the absence of a line will lead to a model preferring a very small amplitude for that line. This reflects our state of knowledge of the system: in practice, it is impossible to distinguish between the absence of a line and a line with a very small amplitude.
 
 Each line $k$ is modelled as a Gaussian with location and scale parameters $\mu_k$ and $\sigma_k$ as well as an amplitude $A_k$, respectively. Note that $A_k$ is defined as the integrated flux over the line. We compute the line flux in each wavelength bin $j$ by integrating the model flux within the bin from the lower edge $\lambda_{j, \mathrm{low}}$ to the upper bin edge $\lambda_{j, \mathrm{high}}$:
 
@@ -94,7 +96,9 @@ Each line $k$ is modelled as a Gaussian with location and scale parameters $\mu_
 
 \noindent where $j$ is the index of a wavelength bin and $\erf$ defines the error function. 
 
-We use a OU process for the background [ADD DETAILS].
+X-ray spectra have very noticeable continuum contributions as well as calibration that needs to be performed on the data. In most high-resolution spectra, the continuum will be fit separately to the data and then divided out before attempting line fits. In principle, the statistically consistent approach to the model we propose here would be to fit continuum parameters at the same time as the spectral lines. Because both continuum modelling and calibration is a non-trivial task for high-resolution spectroscopy, we do not attempt in this work to include this contribution, but note that there is scope for improvement in this direction in the future. 
+Instead, we choose a simple model to account for residual continuum contributions and potential biases due to incorrect calibration by modeling the continuum by a combination of a simple constant model and an autoregressive process called an Ornstein-Uhlenbeck (OU) process. The latter is a damped random walk capable of modelling trends in the data as well as smaller irregularities. It adds two parameters to the model: a length scale $\tau$ describing the interval within which correlations are important, and an amplitude $A_{\mathrm{OU}}$ describing the variance of the induced fluctuations. 
+We regard these parameters as nuisance parameters, which will be sampled along with the remaining parameters of the model 
 
  
 

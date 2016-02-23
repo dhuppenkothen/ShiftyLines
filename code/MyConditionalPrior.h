@@ -8,7 +8,7 @@ class MyConditionalPrior:public DNest4::ConditionalPrior
 	private:
 
 		// Mean of amplitudes and widths
-		double mu_loga, sigma_loga, mu_logq, sigma_logq;
+		double mu_loga, sigma_loga, mu_logwidth, sigma_logwidth;
 		double pp;
 
 		static const double dmin, dmax;

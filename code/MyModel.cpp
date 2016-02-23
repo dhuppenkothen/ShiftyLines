@@ -42,8 +42,9 @@ void MyModel::calculate_mu()
  
 	// get amplitudes and widths from the RJObject 
 	const vector< vector<double> >& dopplershiftcomponents = dopplershift.get_components();
-
-	vector<double> amplitude, logq, sign, width;
+ 
+//	vector<double> amplitude, logq, sign, width;
+	vector<double> amplitude, sign, width;
 	double dshift;
 
 	vector<double> mu_temp(mu.size(), 0.0);
@@ -54,7 +55,7 @@ void MyModel::calculate_mu()
 	        line_pos_shifted.assign(line_pos.size(), 0.0);
 
 		amplitude.assign(nlines, 0.);
-		logq.assign(nlines, 0.);
+//		logq.assign(nlines, 0.);
 		sign.assign(nlines, 0.);
 		width.assign(nlines, 0.);
 
@@ -64,9 +65,9 @@ void MyModel::calculate_mu()
 			{
 				line_pos_shifted[i] = line_pos[i]*(1. + dshift);
 				amplitude[i] = exp(dopplershiftcomponents[j][i+1]);
-				logq[i] = dopplershiftcomponents[j][i+1+nlines];
+				//logq[i] = dopplershiftcomponents[j][i+1+nlines];
 				sign[i] = dopplershiftcomponents[j][i+1+2*nlines];		
-				width[i] = line_pos_shifted[i]/exp(logq[i]);
+				width[i] = exp(dopplershiftcomponents[j][i+1+nlines]);
 			}
 	
 		
@@ -127,8 +128,8 @@ void MyModel::from_prior(RNG& rng)
 	pp = rng.rand();
 	// this, too belongs to the noise process we're not using 
         noise_sigma = exp(log(1E-3) + log(1E3)*rng.rand());
-        noise_L = exp(log(1E-2*Data::get_instance().get_f_range())
-                        + log(1E3)*rng.rand());
+        noise_L = exp(log(0.1*Data::get_instance().get_f_range())
+                        + log(1E2)*rng.rand());
 
         calculate_mu();
 
@@ -193,8 +194,8 @@ double MyModel::perturb(RNG& rng)
 		else
 		{
 			noise_L = log(noise_L);
-			noise_L += log(1E3)*rng.randh();
-			wrap(noise_L, log(1E-2*Data::get_instance().get_f_range()), log(10.*Data::get_instance().get_f_range()));
+			noise_L += log(1E2)*rng.randh();
+			wrap(noise_L, log(0.1*Data::get_instance().get_f_range()), log(10.*Data::get_instance().get_f_range()));
 			noise_L = exp(noise_L);
 		}
 	}
