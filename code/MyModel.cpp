@@ -13,7 +13,7 @@ const int& nlines = Data::get_instance().get_nlines();
 
 MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
-:dopplershift(3*nlines+1, 1, true, MyConditionalPrior())
+:dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
 ,noise_normals(data.get_f_left().size())
 ,mu(data.get_f_left().size())
 {
