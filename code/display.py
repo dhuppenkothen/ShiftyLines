@@ -7,7 +7,7 @@ import argparse
 #data = loadtxt('../data/test_data3.dat')
 #posterior_sample = atleast_2d(loadtxt('posterior_sample.txt'))
 
-def display_samples(filename, posterior_dir, save_frames=False):
+def display_samples(filename, posterior_dir, save_frames=True):
     """
     Utility function for displaying samples from the posterior along 
     with the data. 
@@ -22,7 +22,7 @@ def display_samples(filename, posterior_dir, save_frames=False):
 
     save_frames: bool
         Flag determining whether to save the frames being plotted 
-        to files. Default: False
+        to files. Default: True
 
 
     """
@@ -37,7 +37,6 @@ def display_samples(filename, posterior_dir, save_frames=False):
         except OSError:	
             print("Directory already exists!")
 
-    plt.ion()
     for i in range(0, posterior_sample.shape[0]):
         plt.hold(False)
         plt.plot(data[:,0], data[:,2], linestyle="steps-mid")
@@ -45,13 +44,9 @@ def display_samples(filename, posterior_dir, save_frames=False):
         plt.plot(data[:,0], posterior_sample[i, -data.shape[0]:], 'r')
         plt.xlabel('Wavelength [Angstrom]', fontsize=16)
         plt.ylabel('Flux', fontsize=16)
-        plt.draw()
         if save_frames:
-            plt.savefig(posterior_dir+'Frames/' + '%0.4d'%(i+1) + '.png', bbox_inches='tight')
-            print(posterior_dir+'Frames/' + '%0.4d'%(i+1) + '.png')
-
-    plt.ioff()
-    plt.show()
+            plt.savefig(posterior_dir+'Frames/' + '%0.6d'%(i+1) + '.png', bbox_inches='tight')
+            print(posterior_dir+'Frames/' + '%0.6d'%(i+1) + '.png')
     return
  
 if __name__ == "__main__":
@@ -75,3 +70,4 @@ if __name__ == "__main__":
     save_frames = clargs.save_frames 
 
     display_samples(filename, posterior_dir, save_frames)
+

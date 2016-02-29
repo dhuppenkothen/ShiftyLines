@@ -13,3 +13,6 @@ code/.swp
 data/8525_nodip_0.dat
 data/8525_nodip_cut.txt
 demos/.ipynb_checkpoints/
+code/Frames/*.png
+code/Frames/movie.avi
+
