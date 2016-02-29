@@ -28,6 +28,7 @@
 \newcommand{\project}[1]{\textsl{#1}}
 \newcommand{\fermi}{\project{Fermi}}
 \newcommand{\rxte}{\project{RXTE}}
+\newcommand{\chandra}{\project{Chandra}}
 \newcommand{\given}{\,|\,}
 \newcommand{\dd}{\mathrm{d}}
 \newcommand{\counts}{y}
@@ -98,8 +99,10 @@ Each line $(i,k), \, k \in \{0, ..., K\}$ for a Doppler shift $d_i \in \{d_0, ..
 
 \noindent where $j$ is the index of a wavelength bin and $\erf$ defines the error function. 
 
-X-ray spectra have very noticeable continuum contributions as well as calibration that needs to be performed on the data. In most high-resolution spectra, the continuum will be fit separately to the data and then divided out before attempting line fits. In principle, the statistically consistent approach to the model we propose here would be to fit continuum parameters at the same time as the spectral lines. Because both continuum modelling and calibration is a non-trivial task for high-resolution spectroscopy, we do not attempt in this work to include this contribution, but note that there is scope for improvement in this direction in the future. 
-Instead, we choose a simple model to account for residual continuum contributions and potential biases due to incorrect calibration by modeling the continuum by a combination of a simple constant model $\mean_{\mathrm{bkg}}$ and an autoregressive process called an Ornstein-Uhlenbeck (OU) process. The latter is a damped random walk capable of modelling trends in the data as well as smaller irregularities. It adds two parameters to the model: a length scale $\tau_{\mathrm{OU}}$ describing the interval within which correlations are important, and an amplitude $A_{\mathrm{OU}}$ describing the variance of the induced fluctuations. 
+X-ray spectra have very noticeable continuum contributions as well as calibration that needs to be performed on the data. In most high-resolution spectra, the continuum and spectral lines will be fit together with the continuum, though the presence of individual lines must be confirmed via hypothesis testing. Response matrices describing the calibration effects are generated in advance and applied---depending on the software being used---either on the data itself, to move the data from the detector space into the flux space corresponding to the emission incident on the detector, or on the model, moving the model into the detector space instead. In general, calibration for any instrument is rarely complete, and residuals from imperfect calibration may remain in the data. 
+In principle, the statistically consistent approach to the model we propose here would be to include both various choices for calibration as well as the parameters of the model describing the continuum in the same model as the spectral lines and sample all model components together. Because both continuum modelling and calibration is a non-trivial task for high-resolution spectroscopy, we do not attempt in this work to include this contribution, but note that there is scope for improvement in this direction in the future. %%% Note to self: This might need to change if we actually do include continuum models!
+It is also often the case that the high-resolution spectra observed with e.g.\ \chandra\ require different calibration at different wavelengths, thus one often separates the spectrum into two or more intervals which are calibrated and subsequently modelled independently. In this case, a full continuum model is often unnecessary and supplanted either by a power law or a spline modelling the remainder of the continuum. While the latter approach discards valuable information by modelling intervals independently even though they belong to the same source spectrum, for the purposes of this work, it makes the analysis considerably easier.
+We choose a simple model to account for residual continuum contributions and potential biases due to incorrect calibration by modeling the continuum by a combination of a simple constant model $\mean_{\mathrm{bkg}}$ and an autoregressive process called an Ornstein-Uhlenbeck (OU) process. The latter is a damped random walk capable of modelling trends in the data as well as smaller irregularities. It adds two parameters to the model: a length scale $\tau_{\mathrm{OU}}$ describing the interval within which correlations are important, and an amplitude $A_{\mathrm{OU}}$ describing the variance of the induced fluctuations. 
 We regard these parameters as nuisance parameters, which will be sampled along with the remaining parameters of the model and integrated out for the final parameter estimates. 
 Thus, the complete model for an observed X-ray spectrum is
 
@@ -124,7 +127,7 @@ p(D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} \given  \bm{\counts}, H) & = &
 					& &  / p(\bm{\counts} \given H)\; ,
 \end{eqnarray} 
 
-\noindent where $\likelihood(D, \{d_i\}, \bm{\alpha}, \beta, \{\bm{\pars_{i,k}}\})$ describes the likelihood of the data and $\pi(D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} $ the prior. $H$ stands in as a place-holder for all other assumptions made in the model, including the shape of the priors and the sampling distribution chosen in the likelihood. The distribution $p(\bm{\counts} \given H)$ is called the marginal likelihood or Bayesian evidence and in effect a normalization that ensures the posterior to be a proper probability distribution:
+\noindent where $\likelihood(D, \{d_i\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\})$ describes the likelihood of the data and $\pi(D, \{d_i\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\} $ the prior. $H$ stands in as a place-holder for all other assumptions made in the model, including the shape of the priors and the sampling distribution chosen in the likelihood. The distribution $p(\bm{\counts} \given H)$ is called the marginal likelihood or Bayesian evidence and in effect a normalization that ensures the posterior to be a proper probability distribution:
 
 \begin{eqnarray}
 p(\bm{\counts} \given H) & = & \int_\Omega{ \likelihood(D, \{d_i\}, \bm{\alpha}, \beta, \{\bm{\pars_{i,k}}\}) } \\\nonumber
@@ -151,16 +154,20 @@ For the prior distributions, we assume independence between the individual param
 prior  $\pi(D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} $ can be split up into simpler distributions:
 
 \begin{eqnarray}
-\pi(D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} ) & = &  p(D \given H) p(\alpha \given H) p(\beta \given H)   \nonumber \\	
-					& & \times \prod_{i=1}^{D}{\left[p(d_i \given H) \prod_{k=1}^{K}{p( \{\bm{\pars_{i,k}}\} \given \alpha, H)}\right]} 
+\pi(D, \{d_i\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\} ) & = &  p(D \given H) p(\bm{\alpha} \given H) p(\bm{\beta} \given H)   \nonumber \\	
+					& & \times \prod_{i=1}^{D}{\left[p(d_i \given H) \prod_{k=1}^{K}{p( \{\bm{\pars_{i,k}}\} \given \bm{\alpha}, H)}\right]} 
 \end{eqnarray}
 
+The details of the prior distributions chosen for this work are listed in the subsequent section.
 
 \subsection{Priors}
 \label{sec:priors}
 
-Here we list all the priors in the model.
+As much as possible, priors were chosen that correspond to physical constraints on the system being studied, and non-informative priors were chosen where this was not possible. 
 
+We choose Laplace prior distributions for the line amplitudes and widths. The Laplace distribution is similar to the normal distribution in that the tails are exponential, and was chosen over the normal distribution predominantly for being somewhat numerically easier to implement. The choice of one prior distribution for all line amplitudes and widths intrinsically assumes that all line amplitudes and widths are drawn from the same distribution, whereas in reality this may not be true for different elements or different ions. Again, this choice was made to keep the model manageable in its first iteration when used on relatively simple spectra, but we may consider choosing more physically motivated priors for more challenging data in the future.
+The primary concern when making this choice is that if a spectrum contains very strong lines while at the same time missing lines at positions being sampled, the prior might inadvertently sample lower amplitudes for the strong lines or infer larger line amplitudes for the lines missing from the data.
+We mitigate this potential problem also sampling over the location and scale parameters of the Laplacian distributions for width and amplitudes. This allows a fairly flexible range of models by potentially making very wide prior distributions if the widths and amplitudes of lines are very different in the spectrum.
 
 \begin{table*}[hbtp]
 \renewcommand{\arraystretch}{1.3}
@@ -220,6 +227,9 @@ This is a problem that makes all sampling algorithms fail, and requires careful 
 
 \section{Results}
 
+\subsection{Testing prior assumptions}
+
+How much do our results change if we change the priors? Need to test that!
 
 \section{Discussions}
 
