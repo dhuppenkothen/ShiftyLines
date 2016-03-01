@@ -32,10 +32,6 @@ def display_samples(filename, posterior_dir, save_frames=True):
 
     if save_frames:
         os.system('rm '+ posterior_dir + 'Frames/*.png')
-        try:
-            os.mkdir(posterior_dir+"Frames/")        
-        except OSError:	
-            print("Directory already exists!")
 
     for i in range(0, posterior_sample.shape[0]):
         plt.hold(False)
