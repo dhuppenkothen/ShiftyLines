@@ -9,6 +9,25 @@ typedef struct {
    // keep file name for later use
    char  filename[200];
 
+   // the vectors with some of the data stuff;
+   std::vector<double> energ_lo, energ_hi, n_grp;
+
+   std::vector<std::vector<double>> f_chan, n_chan;
+   //std::vector< std::vector<double>> f_chan, n_chan;
+
+
+   std::vector<int> e_min, e_max;
+
+   int detchans, tlmin, offset;
+
+}RMFData;
+
+
+
+typedef struct {
+   // keep file name for later use
+   char  filename[200];
+
    // the data: channels, counts, energy bin edges
    std::vector<double> channel, counts, bin_lo, bin_mid, bin_hi;
    
@@ -22,26 +41,12 @@ typedef struct {
    std::string bin_lo_unit, bin_hi_unit;
 
    // Data structure with the RMF
-   //RMFData rmf;
+   RMFData rmf;
    
    // Data structure with the ARF;
    //ARFData arf;
 
 }PHAData;
-
-
-typedef struct {
-   // keep file name for later use
-   char  filename[200];
-
-   // the vectors with some of the data stuff;
-   std::vector<double> energ_lo, energ_hi, n_grp, f_chan, n_chan;
-
-   std::vector<double> e_min, e_max;
-
-   int detchans, tlmin, offset;
-
-}RMFData;
 
 
 class Data
@@ -70,7 +75,7 @@ class Data
 		void load(const char* filename);
 		void load_lines(const char* filename);
       		void load_data(const char* datadir, const char* filename);
-		void load_rmf(const char* datadir, const char* filename);
+		RMFData load_rmf(const char* datadir, const char* filename);
 		// Getters
 		const std::vector<double>& get_f_mid() const { return f_mid; }
 		const std::vector<double>& get_df() const { return df; }

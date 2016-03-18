@@ -84,12 +84,14 @@ void Data::load_data(const char* datadir, const char* filename)
   // Print out the first value to check
   cout<<"# Found "<< pha.ncounts <<" line positions in "<<pha.filename<<"."<<endl;
 
+  const char *respfilechars = pha.respfile.c_str();
 
+  rmf = load_rmf(datadir, respfilechars); 
   // load the associated rmf files
 
 }
 
-void Data::load_rmf(const char* datadir, const char* filename)
+RMFData Data::load_rmf(const char* datadir, const char* filename)
 {
 
   char whole_file[256];
@@ -118,8 +120,9 @@ void Data::load_rmf(const char* datadir, const char* filename)
   CCfits::Column& column4 = matrix.column("F_CHAN");
   column4.read(rmf.f_chan, 1, column4.rows());
 
-  CCfits::Column& column5 = matrix.column("N_CHAN");
-  column5.read(rmf.n_chan, 1, column5.rows());
+
+  //CCfits::Column& column5 = matrix.column("N_CHAN");
+  //column5.read(rmf.n_chan, 1, column5.rows());
 
   cout<<"There are "<<rmf.energ_lo.size()<<" energy bins."<<endl;
 
@@ -141,7 +144,8 @@ void Data::load_rmf(const char* datadir, const char* filename)
 
   CCfits::Column& column7 = ebounds.column("E_MAX");
   column7.read(rmf.e_max, 1, column7.rows());
-   
+  
+  return rmf; 
 }
 
 void Data::load_lines(const char* filename)
