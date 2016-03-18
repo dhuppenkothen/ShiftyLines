@@ -12,14 +12,14 @@ int main(int argc, char** argv)
 	CommandLineOptions options(argc, argv);
 
 	// get the data filename from the command line
-	Data::get_instance().load(options.get_data_file().c_str());
+	Data::get_instance().load_data(options.get_data_file().c_str());
 
 	// file with line positions in same units as data; CURRENTLY HARDCODED!
 	Data::get_instance().load_lines("../data/si_lines.txt");
  
 	// sample!
-	Sampler<MyModel> sampler = setup<MyModel>(options);
-	sampler.run();
+	//Sampler<MyModel> sampler = setup<MyModel>(options);
+	//sampler.run();
 	return 0;
 }
 

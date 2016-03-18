@@ -3,6 +3,13 @@
 #include <fstream>
 #include <algorithm>
 #include <cmath>
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <CCfits>
+
 using namespace std;
 
 Data Data::instance;
@@ -11,6 +18,44 @@ Data::Data()
 {
 
 }
+
+void Data::load_data(const char* filename)
+{
+
+
+  CCfits::FITS::setVerboseMode(true);
+
+  // Open file for reading
+  std::auto_ptr<CCfits::FITS> input_file(new CCfits::FITS(filename,CCfits::Read));
+
+  // point to correct HDU extension
+  CCfits::ExtHDU& spectrum = input_file->extension("SPECTRUM");
+
+  // get out the data
+  CCfits::Column& column = spectrum.column("CHANNEL");
+  column.read(channel, 1, column.rows());
+  
+  CCfits::Column& column2 = spectrum.column("COUNTS");
+  column.read(counts, 1, column2.rows());
+
+  CCfits::Column& column3 = spectrum.column("BIN_LO");
+  column.read(bin_lo, 1, column3.rows());
+
+  CCfits::Column& column4 = spectrum.column("BIN_HI");
+  column.read(bin_hi, 1, column4.rows());
+
+  // need to read some keys, too!
+
+  
+  // the number of counts
+  ncounts = counts.size();
+
+  // Print out the first value to check
+  cout<<"# Found "<< ncounts <<" line positions in "<<filename<<"."<<endl;
+
+
+}
+
 
 void Data::load_lines(const char* filename)
 {

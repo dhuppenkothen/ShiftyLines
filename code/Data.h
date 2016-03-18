@@ -2,10 +2,17 @@
 #define _Data_
 
 #include <vector>
+#include <string> 
 
 class Data
 {
 	private:
+		// defining the data coming out of the fits files
+		double exposure, counts;
+		std::string ancrfile, respfile;
+
+		std::vector<double> channel, counts, bin_lo, bin_hi;
+		
 		std::vector<double> f_left, f_right, y, yerr;
 		std::vector<double> f_mid, df;
 
@@ -19,6 +26,7 @@ class Data
 		Data();
 		void load(const char* filename);
 		void load_lines(const char* filename);
+      		void load_data(const char* filename);
 
 		// Getters
 		const std::vector<double>& get_f_mid() const { return f_mid; }
