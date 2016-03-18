@@ -4,6 +4,8 @@
 #include <vector>
 #include <string> 
 #include <cstring>
+#include <valarray>
+
 
 typedef struct {
    // keep file name for later use
@@ -11,10 +13,9 @@ typedef struct {
 
    // the vectors with some of the data stuff;
    std::vector<double> energ_lo, energ_hi, n_grp;
-
-   std::vector<std::vector<double>> f_chan, n_chan;
-   //std::vector< std::vector<double>> f_chan, n_chan;
-
+ 
+   //std::vector<std::vector<double>> f_chan, n_chan;
+   std::vector<std::valarray<float>> f_chan, n_chan, matrix;
 
    std::vector<int> e_min, e_max;
 
@@ -22,8 +23,12 @@ typedef struct {
 
 }RMFData;
 
+typedef struct {
 
+  char filename[200];
 
+}ARFData;
+ 
 typedef struct {
    // keep file name for later use
    char  filename[200];

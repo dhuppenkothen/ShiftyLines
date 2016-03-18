@@ -31,7 +31,7 @@ void Data::load_data(const char* datadir, const char* filename)
   CCfits::FITS::setVerboseMode(true);
 
   // Open file for reading
-  std::auto_ptr<CCfits::FITS> input_file(new CCfits::FITS(pha.filename,CCfits::Read));
+  std::unique_ptr<CCfits::FITS> input_file(new CCfits::FITS(pha.filename,CCfits::Read));
 
   // point to correct HDU extension
   CCfits::ExtHDU& spectrum = input_file->extension("SPECTRUM");
@@ -102,7 +102,7 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
   CCfits::FITS::setVerboseMode(true);
 
   // Open file for reading
-  std::auto_ptr<CCfits::FITS> input_file(new CCfits::FITS(rmf.filename,CCfits::Read));
+  std::unique_ptr<CCfits::FITS> input_file(new CCfits::FITS(rmf.filename,CCfits::Read));
 
   // point to correct HDU extension
   CCfits::ExtHDU& matrix = input_file->extension("MATRIX");
@@ -118,26 +118,39 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
   column3.read(rmf.n_grp, 1, column3.rows());
 
   CCfits::Column& column4 = matrix.column("F_CHAN");
-  column4.read(rmf.f_chan, 1, column4.rows());
+  column4.readArrays(rmf.f_chan, 1, column4.rows());
+ 
+  CCfits::Column& column5 = matrix.column("N_CHAN");
+  column5.readArrays(rmf.n_chan, 1, column5.rows());
 
-
-  //CCfits::Column& column5 = matrix.column("N_CHAN");
-  //column5.read(rmf.n_chan, 1, column5.rows());
+  // NOTE: Alternative names could be "SPECRESP MATRIX", 
+  // "AXAF_RMF" and it could also be "HDUCLAS1" or "HDUCLAS2" 
+  // with a key being "RESPONSE" or "RSP_MATRIX".
+  // need to add that functionality some time.
+  CCfits::Column& column_m = matrix.column("MATRIX");
+  column_m.readArrays(rmf.matrix, 1, column_m.rows());
 
   cout<<"There are "<<rmf.energ_lo.size()<<" energy bins."<<endl;
 
   // somem keywords
   int detchans, tlmin;
   matrix.readKey("DETCHANS", detchans);
-  matrix.readKey("TLMIN", tlmin);
-  
+  try {
+      // NOTE: Keyword hardcoded in, but probably shouldn't be!
+      // In practice, need to figure out the number after TLMIN from 
+      // FITS file. See Sherpa source code + notebook for details
+      matrix.readKey("TLMIN4", tlmin);
+      rmf.tlmin = tlmin;
+      }
+  catch(CCfits::HDU::NoSuchKeyword)
+      { rmf.tlmin = 0; }
+
   rmf.detchans = detchans;
-  rmf.tlmin = tlmin;
 
   rmf.offset = tlmin; 
 
   // point to correct HDU extension
-  CCfits::ExtHDU& ebounds = input_file->extension("MATRIX");
+  CCfits::ExtHDU& ebounds = input_file->extension("EBOUNDS");
 
   CCfits::Column& column6 = ebounds.column("E_MIN");
   column6.read(rmf.e_min, 1, column6.rows());
