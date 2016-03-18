@@ -2,7 +2,7 @@
 #include "DNest4/code/Start.h"
 #include "MyModel.h"
 #include "Data.h"
-
+#include <string>
 using namespace std;
 using namespace DNest4;
 
@@ -10,9 +10,12 @@ int main(int argc, char** argv)
 {
 	// parse command line options
 	CommandLineOptions options(argc, argv);
+ 
+        char datadir[50];
+        strcpy(datadir, "../data/cyg_daniela/");
 
 	// get the data filename from the command line
-	Data::get_instance().load_data(options.get_data_file().c_str());
+	Data::get_instance().load_data(datadir, options.get_data_file().c_str());
 
 	// file with line positions in same units as data; CURRENTLY HARDCODED!
 	Data::get_instance().load_lines("../data/si_lines.txt");

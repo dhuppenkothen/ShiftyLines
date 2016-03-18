@@ -3,16 +3,59 @@
 
 #include <vector>
 #include <string> 
+#include <cstring>
+
+typedef struct {
+   // keep file name for later use
+   char  filename[200];
+
+   // the data: channels, counts, energy bin edges
+   std::vector<double> channel, counts, bin_lo, bin_mid, bin_hi;
+   
+   // the exposure and the number of counts
+   double exposure, ncounts;
+
+   // file names of ARF and RMF files
+   std::string ancrfile, respfile;
+
+   // units of bin_lo and bin_hi:
+   std::string bin_lo_unit, bin_hi_unit;
+
+   // Data structure with the RMF
+   //RMFData rmf;
+   
+   // Data structure with the ARF;
+   //ARFData arf;
+
+}PHAData;
+
+
+typedef struct {
+   // keep file name for later use
+   char  filename[200];
+
+   // the vectors with some of the data stuff;
+   std::vector<double> energ_lo, energ_hi, n_grp, f_chan, n_chan;
+
+   std::vector<double> e_min, e_max;
+
+   int detchans, tlmin, offset;
+
+}RMFData;
+
 
 class Data
 {
 	private:
 		// defining the data coming out of the fits files
-		double exposure, counts;
-		std::string ancrfile, respfile;
+		//double exposure, ncounts;
+		//std::string ancrfile, respfile;
 
-		std::vector<double> channel, counts, bin_lo, bin_hi;
-		
+		//std::vector<double> channel, counts, bin_lo, bin_hi;
+	
+		PHAData pha;
+   		RMFData rmf;
+	
 		std::vector<double> f_left, f_right, y, yerr;
 		std::vector<double> f_mid, df;
 
@@ -26,8 +69,8 @@ class Data
 		Data();
 		void load(const char* filename);
 		void load_lines(const char* filename);
-      		void load_data(const char* filename);
-
+      		void load_data(const char* datadir, const char* filename);
+		void load_rmf(const char* datadir, const char* filename);
 		// Getters
 		const std::vector<double>& get_f_mid() const { return f_mid; }
 		const std::vector<double>& get_df() const { return df; }

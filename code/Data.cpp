@@ -3,6 +3,8 @@
 #include <fstream>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
+
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -19,43 +21,128 @@ Data::Data()
 
 }
 
-void Data::load_data(const char* filename)
+void Data::load_data(const char* datadir, const char* filename)
 {
-
+  char whole_file[256];
+  strcpy(whole_file, datadir);
+  strcat(whole_file, filename);
+  strcpy(pha.filename, whole_file);
 
   CCfits::FITS::setVerboseMode(true);
 
   // Open file for reading
-  std::auto_ptr<CCfits::FITS> input_file(new CCfits::FITS(filename,CCfits::Read));
+  std::auto_ptr<CCfits::FITS> input_file(new CCfits::FITS(pha.filename,CCfits::Read));
 
   // point to correct HDU extension
   CCfits::ExtHDU& spectrum = input_file->extension("SPECTRUM");
 
   // get out the data
   CCfits::Column& column = spectrum.column("CHANNEL");
-  column.read(channel, 1, column.rows());
+  column.read(pha.channel, 1, column.rows());
   
   CCfits::Column& column2 = spectrum.column("COUNTS");
-  column.read(counts, 1, column2.rows());
+  column.read(pha.counts, 1, column2.rows());
 
   CCfits::Column& column3 = spectrum.column("BIN_LO");
-  column.read(bin_lo, 1, column3.rows());
+  column.read(pha.bin_lo, 1, column3.rows());
 
   CCfits::Column& column4 = spectrum.column("BIN_HI");
-  column.read(bin_hi, 1, column4.rows());
+  column.read(pha.bin_hi, 1, column4.rows());
 
+  vector<double> bin_mid(pha.bin_lo.size(), 0.0);
+
+  // compute the middle of the energy bins
+  for(size_t i=0; i<pha.bin_lo.size(); i++){
+     bin_mid[i] = pha.bin_hi[i] - pha.bin_lo[i];   
+  }
+
+  pha.bin_mid = bin_mid;
+
+  string respfile, ancrfile;
   // need to read some keys, too!
+  spectrum.readKey("RESPFILE", respfile);
+  spectrum.readKey("ANCRFILE", ancrfile);
 
-  
+  string eunit_lo, eunit_hi;
+  spectrum.readKey("TUNIT2", eunit_lo);
+  spectrum.readKey("TUNIT3", eunit_hi);
+
+  cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
+
+  pha.bin_lo_unit = eunit_lo;
+  pha.bin_hi_unit = eunit_hi;
+
+  pha.respfile = respfile;
+  pha.ancrfile = ancrfile;
+
+  cout<<"# Redistribution Matrix File: "<< pha.respfile <<"."<<endl;
+  cout<<"# Ancillary Response File: "<< pha.ancrfile <<"."<<endl;
+
   // the number of counts
-  ncounts = counts.size();
+  pha.ncounts = pha.counts.size();
 
   // Print out the first value to check
-  cout<<"# Found "<< ncounts <<" line positions in "<<filename<<"."<<endl;
+  cout<<"# Found "<< pha.ncounts <<" line positions in "<<pha.filename<<"."<<endl;
 
+
+  // load the associated rmf files
 
 }
 
+void Data::load_rmf(const char* datadir, const char* filename)
+{
+
+  char whole_file[256];
+  strcpy(whole_file, datadir);
+  strcat(whole_file, filename); 
+  strcpy(rmf.filename, whole_file);
+
+  CCfits::FITS::setVerboseMode(true);
+
+  // Open file for reading
+  std::auto_ptr<CCfits::FITS> input_file(new CCfits::FITS(rmf.filename,CCfits::Read));
+
+  // point to correct HDU extension
+  CCfits::ExtHDU& matrix = input_file->extension("MATRIX");
+ 
+  // get out the data
+  CCfits::Column& column = matrix.column("ENERG_LO");
+  column.read(rmf.energ_lo, 1, column.rows());
+
+  CCfits::Column& column2 = matrix.column("ENERG_HI");
+  column2.read(rmf.energ_hi, 1, column2.rows());
+
+  CCfits::Column& column3 = matrix.column("N_GRP");
+  column3.read(rmf.n_grp, 1, column3.rows());
+
+  CCfits::Column& column4 = matrix.column("F_CHAN");
+  column4.read(rmf.f_chan, 1, column4.rows());
+
+  CCfits::Column& column5 = matrix.column("N_CHAN");
+  column5.read(rmf.n_chan, 1, column5.rows());
+
+  cout<<"There are "<<rmf.energ_lo.size()<<" energy bins."<<endl;
+
+  // somem keywords
+  int detchans, tlmin;
+  matrix.readKey("DETCHANS", detchans);
+  matrix.readKey("TLMIN", tlmin);
+  
+  rmf.detchans = detchans;
+  rmf.tlmin = tlmin;
+
+  rmf.offset = tlmin; 
+
+  // point to correct HDU extension
+  CCfits::ExtHDU& ebounds = input_file->extension("MATRIX");
+
+  CCfits::Column& column6 = ebounds.column("E_MIN");
+  column6.read(rmf.e_min, 1, column6.rows());
+
+  CCfits::Column& column7 = ebounds.column("E_MAX");
+  column7.read(rmf.e_max, 1, column7.rows());
+   
+}
 
 void Data::load_lines(const char* filename)
 {
