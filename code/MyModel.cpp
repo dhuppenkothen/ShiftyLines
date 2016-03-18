@@ -38,7 +38,10 @@ void MyModel::calculate_mu()
 
         // NEW VERSION: get PHA data from FITS file:
         // doesn't do anything yet, just testing whether I can load the data!
-        PHAData pha = data.get_pha();
+	// NOTE: Just having this line in the code (uncommented, of course), makes
+	// the code slower by at least a factor of 3! Not sure why that is, but I 
+	// should probably figure that out
+        //PHAData pha = data.get_pha();
 
 
 	// assign constant background to model
