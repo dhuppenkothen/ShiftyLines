@@ -14,8 +14,8 @@ typedef struct {
    // the vectors with some of the data stuff;
    std::vector<double> energ_lo, energ_hi, n_grp;
  
-   //std::vector<std::vector<double>> f_chan, n_chan;
-   std::vector<std::valarray<float>> f_chan, n_chan, matrix;
+   std::vector<double> f_chan, n_chan, matrix;
+   //std::vector<std::valarray<float>> f_chan, n_chan, matrix;
 
    std::vector<int> e_min, e_max;
 
@@ -25,7 +25,15 @@ typedef struct {
 
 typedef struct {
 
+  // store file name just in case
   char filename[200];
+  
+  // keyword
+  std::string exposure;
+
+  // the spectral response, energy bins
+  std::vector<double> energ_lo, energ_hi, specresp, bin_lo, bin_hi;
+  
 
 }ARFData;
  
@@ -49,7 +57,7 @@ typedef struct {
    RMFData rmf;
    
    // Data structure with the ARF;
-   //ARFData arf;
+   ARFData arf;
 
 }PHAData;
 
@@ -65,7 +73,8 @@ class Data
 	
 		PHAData pha;
    		RMFData rmf;
-	
+		ARFData arf;	
+
 		std::vector<double> f_left, f_right, y, yerr;
 		std::vector<double> f_mid, df;
 
@@ -81,6 +90,8 @@ class Data
 		void load_lines(const char* filename);
       		void load_data(const char* datadir, const char* filename);
 		RMFData load_rmf(const char* datadir, const char* filename);
+                ARFData load_arf(const char* datadir, const char* filename);
+
 		// Getters
 		const std::vector<double>& get_f_mid() const { return f_mid; }
 		const std::vector<double>& get_df() const { return df; }
@@ -89,7 +100,7 @@ class Data
 		const std::vector<double>& get_y() const { return y; }
 		const std::vector<double>& get_yerr() const { return yerr; }
 		const std::vector<double>& get_line_pos() const { return lines; }
-
+                const PHAData& get_pha() const { return pha; }
 
 		double get_f_min() const { return f_min; }
 		double get_f_max() const { return f_max; }

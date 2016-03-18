@@ -35,7 +35,11 @@ void MyModel::calculate_mu()
 	// get left and right boundaries of the wavelength bins
         const vector<double>& f_left = data.get_f_left();
         const vector<double>& f_right = data.get_f_right();
-//        const vector<double>& f_mid = data.get_f_mid();
+
+        // NEW VERSION: get PHA data from FITS file:
+        // doesn't do anything yet, just testing whether I can load the data!
+        PHAData pha = data.get_pha();
+
 
 	// assign constant background to model
 	mu.assign(mu.size(), background); //old version

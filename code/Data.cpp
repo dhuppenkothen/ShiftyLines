@@ -84,10 +84,16 @@ void Data::load_data(const char* datadir, const char* filename)
   // Print out the first value to check
   cout<<"# Found "<< pha.ncounts <<" line positions in "<<pha.filename<<"."<<endl;
 
+  // need to convert respfile from string to char
   const char *respfilechars = pha.respfile.c_str();
 
-  rmf = load_rmf(datadir, respfilechars); 
-  // load the associated rmf files
+  // load associated RMF file
+  pha.rmf = load_rmf(datadir, respfilechars); 
+
+  // need to convert ancrfile from string to char
+  const char *ancrfilechars = pha.ancrfile.c_str();
+
+  pha.arf = load_arf(datadir, ancrfilechars);
 
 }
 
@@ -104,6 +110,9 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
   // Open file for reading
   std::unique_ptr<CCfits::FITS> input_file(new CCfits::FITS(rmf.filename,CCfits::Read));
 
+  // instantiate objects for temporary variables
+  std::vector<std::valarray<float>> f_chan, n_chan, mtx; 
+
   // point to correct HDU extension
   CCfits::ExtHDU& matrix = input_file->extension("MATRIX");
  
@@ -118,17 +127,17 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
   column3.read(rmf.n_grp, 1, column3.rows());
 
   CCfits::Column& column4 = matrix.column("F_CHAN");
-  column4.readArrays(rmf.f_chan, 1, column4.rows());
+  column4.readArrays(f_chan, 1, column4.rows());
  
   CCfits::Column& column5 = matrix.column("N_CHAN");
-  column5.readArrays(rmf.n_chan, 1, column5.rows());
+  column5.readArrays(n_chan, 1, column5.rows());
 
   // NOTE: Alternative names could be "SPECRESP MATRIX", 
   // "AXAF_RMF" and it could also be "HDUCLAS1" or "HDUCLAS2" 
   // with a key being "RESPONSE" or "RSP_MATRIX".
   // need to add that functionality some time.
   CCfits::Column& column_m = matrix.column("MATRIX");
-  column_m.readArrays(rmf.matrix, 1, column_m.rows());
+  column_m.readArrays(mtx, 1, column_m.rows());
 
   cout<<"There are "<<rmf.energ_lo.size()<<" energy bins."<<endl;
 
@@ -157,9 +166,85 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
 
   CCfits::Column& column7 = ebounds.column("E_MAX");
   column7.read(rmf.e_max, 1, column7.rows());
-  
+
+
+  // do some magic on the arrays
+  for(size_t i=0;i<rmf.n_grp.size();i++) 
+    {
+    if(rmf.n_grp[i]>0)
+         {
+         if (f_chan[i].size() > 1)
+           {
+           for(size_t j=0;j< f_chan[i].size(); j++)
+              rmf.f_chan.push_back(f_chan[i][j]);
+           
+           }
+        else
+             rmf.f_chan.push_back(f_chan[i][0]);
+       
+        if (n_chan[i].size() > 1)
+           {
+           for(size_t j=0;j< n_chan[i].size(); j++)
+              rmf.n_chan.push_back(n_chan[i][j]);
+           }
+        else
+            rmf.n_chan.push_back(n_chan[i][0]);
+       
+        for(size_t j=0; j<mtx[i].size(); j++)
+           rmf.matrix.push_back(mtx[i][j]);
+  }
+  }
+
+  cout<<"There are "<<rmf.matrix.size()<<" elements in the response matrix."<<endl;
+
+ 
   return rmf; 
 }
+
+ARFData Data::load_arf(const char* datadir, const char* filename)
+{
+
+  char whole_file[256];
+  strcpy(whole_file, datadir);
+  strcat(whole_file, filename);
+  strcpy(arf.filename, whole_file);
+
+  CCfits::FITS::setVerboseMode(true);
+
+  // Open file for reading
+  std::unique_ptr<CCfits::FITS> input_file(new CCfits::FITS(arf.filename,CCfits::Read));
+
+  // point to correct HDU extension
+  // NOTE: This could also be "AXAF_ARF"
+  CCfits::ExtHDU& specresp = input_file->extension("SPECRESP");
+
+  // get out the data
+  CCfits::Column& column = specresp.column("ENERG_LO");
+  column.read(arf.energ_lo, 1, column.rows());
+
+  CCfits::Column& column2 = specresp.column("ENERG_HI");
+  column2.read(arf.energ_hi, 1, column2.rows());
+
+  CCfits::Column& column3 = specresp.column("SPECRESP");
+  column3.read(arf.specresp, 1, column3.rows());
+
+  try
+    {
+    CCfits::Column& column4 = specresp.column("BIN_LO");
+    column4.read(arf.bin_lo, 1, column4.rows());
+  
+    CCfits::Column& column5 = specresp.column("BIN_HI");
+    column5.read(arf.bin_hi, 1, column5.rows());
+    }
+  catch(CCfits::HDU::NoSuchKeyword)
+    { 
+    cout<<"No keywords BIN_LO and BIN_HI"<<endl;
+    }
+
+  cout<<"There are "<<arf.specresp.size()<<" elements in the ARF."<<endl;
+  
+  return arf;
+} 
 
 void Data::load_lines(const char* filename)
 {
