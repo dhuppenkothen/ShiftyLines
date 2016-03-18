@@ -3,6 +3,7 @@
 #include "Data.h"
 #include "Lookup.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace std;
 using namespace DNest4;
@@ -24,13 +25,86 @@ double MyModel::gaussian_cdf(double x, double x0, double gamma)
 	return 0.5*(1. + Lookup::erf((x-x0)/(gamma*sqrt(2.))));
 }
 
+template <typename ConstIntType, typename ConstFloatType,
+            typename FloatType, typename IndexType, typename UIndexType>
+
+void MyModel::rmf_fold(IndexType len_source, const ConstFloatType *source,
+                IndexType len_num_groups, const ConstIntType *num_groups,
+                IndexType len_first_chan, const ConstIntType *first_chan,
+                IndexType len_num_chans, const ConstIntType *num_chans,
+                IndexType len_response, const ConstFloatType *resp,
+                IndexType len_counts, FloatType *counts,
+                UIndexType offset)
+{
+    //int flag = 0;
+    if ( ( len_num_groups != len_source ) ||
+         ( len_first_chan != len_num_chans ))
+		throw std::invalid_argument();
+
+    // How many groups are in the current energy bin?
+    IndexType current_num_groups = 0;
+
+    // How many channels are in the current group?
+    IndexType current_num_chans = 0;
+
+    // What is the current channel of the output (counts) array?
+    //register IndexType current_chan = 0;
+
+    FloatType source_bin_ii;
+    const ConstFloatType *resp_tmp = resp;
+    const ConstIntType *first_chan_tmp = first_chan;
+    const ConstIntType *num_chans_tmp = num_chans;
+    FloatType *counts_tmp = counts;
+
+
+    for ( ii = 0; ii < len_source; ii++ ) {
+
+      // ii is the current energy bin
+      source_bin_ii = source[ ii ];
+
+      current_num_groups = num_groups[ ii ];
+
+      while( current_num_groups ) {
+
+        if ( ( IndexType(first_chan_tmp - first_chan) >= len_num_chans ) ||
+             ( UIndexType(*first_chan_tmp) < offset ) )
+                throw std::invalid_argument();
+
+        counts_tmp = counts + *first_chan_tmp - offset;
+        current_num_chans = *num_chans_tmp;
+        first_chan_tmp++;
+        num_chans_tmp++;
+
+        if ( ( (IndexType(counts_tmp-counts) + current_num_chans) > len_counts )
+             ||
+             ( (IndexType(resp_tmp-resp) + current_num_chans) > len_response ) )
+                throw std::invalid_argument();
+
+        while ( current_num_chans ) {
+
+          *counts_tmp += *resp_tmp * source_bin_ii;
+          counts_tmp++;
+          resp_tmp++;
+          current_num_chans--;
+
+        }
+        current_num_groups--;
+
+      }
+
+    } // end for ii
+
+  }
+
+
+
 void MyModel::calculate_mu()
 { 
 	// define line positions
 	const vector<double>& line_pos = data.get_line_pos();
 
 	// declare shifted line positions
-	vector<double> line_pos_shifted;
+	`vector<double> line_pos_shifted;
 
 	// get left and right boundaries of the wavelength bins
         const vector<double>& f_left = data.get_f_left();
@@ -45,6 +119,7 @@ void MyModel::calculate_mu()
 
 	// read out the ARF
         const vector<double> _arf = pha.arf.specresp;
+	RMFData rmf = pha.rmf;
 
 	// assign constant background to model
 	mu.assign(mu.size(), background); //old version
@@ -110,11 +185,9 @@ void MyModel::calculate_mu()
         // Compute the OU process
         vector<double> y(mu.size());
         double alpha = exp(-1./noise_L);
-        // y[i+1] = a*y[i] + sigma*n[i]
-        // S^2 = a^2 S^2 + sigma^2
-        // S^2 = sigma^2/(1 - a^2)
-        // S = sigma/sqrt(1 - a^2)
 
+	// noise process could come both from the source or the detector!
+	// which is why I put it in between the ARF and the RMF
         for(size_t i=0; i<mu.size(); i++)
         {
                 if(i==0)
@@ -125,6 +198,7 @@ void MyModel::calculate_mu()
         }
 
 
+	// Remove all counts < zero, because that would be just silly!
         
 	for (size_t i=0; i<mu.size(); i++)
 		{
@@ -132,6 +206,17 @@ void MyModel::calculate_mu()
 			if (mu[i] < 0.0)
 				mu[i] = 0.0;
 		}
+
+        vector<long double> counts.assign(mu.size(), 0.0);
+        rmf_fold(mu.get_size(), &mu[0], 
+		 rmf.n_grp.get_size(), &rmf.n_grp[0],
+             	 rmf.f_chan.get_size(), &rmf.f_chan[0],
+		 rmf.n_chan.get_size(), &rmf.n_chan[0],
+		 rmf.matrix.get_size(), &rmf.matrix[0],
+		 counts.get_size(), &counts[0],
+		 rmf.offset);
+
+
 }
 
 void MyModel::from_prior(RNG& rng)
@@ -222,7 +307,7 @@ double MyModel::log_likelihood() const
         double logl = 0.;
 	    for(size_t i=0; i<f_mid.size(); i++)
 		{
-			logl += -0.5*log(2.*M_PI) - log(yerr[i]) - pow(y[i]-mu[i], 2)/(2.*pow(yerr[i], 2));
+			logl += -0.5*log(2.*M_PI) - log(yerr[i]) - pow(y[i]-counts[i], 2)/(2.*pow(yerr[i], 2));
  		}
 	return logl;
 }
