@@ -15,7 +15,7 @@ MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
 :dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
 ,noise_normals(data.get_f_left().size())
-,mu(data.get_f_left().size())
+,mu(data.get_pha().arf.specresp.size())
 {
 }
 
@@ -41,8 +41,10 @@ void MyModel::calculate_mu()
 	// NOTE: Just having this line in the code (uncommented, of course), makes
 	// the code slower by at least a factor of 3! Not sure why that is, but I 
 	// should probably figure that out
-        //PHAData pha = data.get_pha();
+        PHAData pha = data.get_pha();
 
+	// read out the ARF
+        const vector<double> _arf = pha.arf.specresp;
 
 	// assign constant background to model
 	mu.assign(mu.size(), background); //old version
@@ -98,6 +100,12 @@ void MyModel::calculate_mu()
                 } 
 
 	}
+
+        // fold through the ARF
+        // code taken from sherpa
+        for (site_t ii = 0; ii < mu.size(); ii++ )
+             mu[ ii ] *= _arf[ ii ];
+
 
         // Compute the OU process
         vector<double> y(mu.size());
