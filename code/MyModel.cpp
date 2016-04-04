@@ -37,9 +37,9 @@ void MyModel::rmf_fold(IndexType len_source, const ConstFloatType *source,
                 UIndexType offset)
 {
     //int flag = 0;
-    if ( ( len_num_groups != len_source ) ||
-         ( len_first_chan != len_num_chans ))
-		throw std::invalid_argument();
+//    if ( ( len_num_groups != len_source ) ||
+//         ( len_first_chan != len_num_chans ))
+//		throw RMFConvolutionFailure();
 
     // How many groups are in the current energy bin?
     IndexType current_num_groups = 0;
@@ -57,7 +57,7 @@ void MyModel::rmf_fold(IndexType len_source, const ConstFloatType *source,
     FloatType *counts_tmp = counts;
 
 
-    for ( ii = 0; ii < len_source; ii++ ) {
+    for (size_t ii = 0; ii < len_source; ii++ ) {
 
       // ii is the current energy bin
       source_bin_ii = source[ ii ];
@@ -66,19 +66,20 @@ void MyModel::rmf_fold(IndexType len_source, const ConstFloatType *source,
 
       while( current_num_groups ) {
 
-        if ( ( IndexType(first_chan_tmp - first_chan) >= len_num_chans ) ||
-             ( UIndexType(*first_chan_tmp) < offset ) )
-                throw std::invalid_argument();
+//        if ( ( IndexType(first_chan_tmp - first_chan) >= len_num_chans ) ||
+//             ( UIndexType(*first_chan_tmp) < offset ) )
+//                //throw RMFConvolutionFailure();
+
 
         counts_tmp = counts + *first_chan_tmp - offset;
         current_num_chans = *num_chans_tmp;
         first_chan_tmp++;
         num_chans_tmp++;
 
-        if ( ( (IndexType(counts_tmp-counts) + current_num_chans) > len_counts )
-             ||
-             ( (IndexType(resp_tmp-resp) + current_num_chans) > len_response ) )
-                throw std::invalid_argument();
+//        if ( ( (IndexType(counts_tmp-counts) + current_num_chans) > len_counts )
+//             ||
+//             ( (IndexType(resp_tmp-resp) + current_num_chans) > len_response ) )
+//                throw RMFConvolutionFailure();
 
         while ( current_num_chans ) {
 
@@ -104,7 +105,7 @@ void MyModel::calculate_mu()
 	const vector<double>& line_pos = data.get_line_pos();
 
 	// declare shifted line positions
-	`vector<double> line_pos_shifted;
+	vector<double> line_pos_shifted;
 
 	// get left and right boundaries of the wavelength bins
         const vector<double>& f_left = data.get_f_left();
@@ -115,11 +116,11 @@ void MyModel::calculate_mu()
 	// NOTE: Just having this line in the code (uncommented, of course), makes
 	// the code slower by at least a factor of 3! Not sure why that is, but I 
 	// should probably figure that out
-        PHAData pha = data.get_pha();
+        //const PHAData& pha = data.get_pha();
 
 	// read out the ARF
-        const vector<double> _arf = pha.arf.specresp;
-	RMFData rmf = pha.rmf;
+        //const vector<double> _arf = pha.arf.specresp;
+	//RMFData rmf = pha.rmf;
 
 	// assign constant background to model
 	mu.assign(mu.size(), background); //old version
@@ -178,8 +179,8 @@ void MyModel::calculate_mu()
 
         // fold through the ARF
         // code taken from sherpa
-        for (site_t ii = 0; ii < mu.size(); ii++ )
-             mu[ ii ] *= _arf[ ii ];
+//        for (size_t ii = 0; ii < mu.size(); ii++ )
+//             mu[ ii ] *= _arf[ ii ];
 
 
         // Compute the OU process
@@ -207,14 +208,15 @@ void MyModel::calculate_mu()
 				mu[i] = 0.0;
 		}
 
-        vector<long double> counts.assign(mu.size(), 0.0);
-        rmf_fold(mu.get_size(), &mu[0], 
-		 rmf.n_grp.get_size(), &rmf.n_grp[0],
-             	 rmf.f_chan.get_size(), &rmf.f_chan[0],
-		 rmf.n_chan.get_size(), &rmf.n_chan[0],
-		 rmf.matrix.get_size(), &rmf.matrix[0],
-		 counts.get_size(), &counts[0],
-		 rmf.offset);
+//        counts.assign(mu.size(), 0.0);
+
+//        rmf_fold(mu.size(), &mu[0], 
+//		 rmf.n_grp.size(), &rmf.n_grp[0],
+//             	 rmf.f_chan.size(), &rmf.f_chan[0],
+//		 rmf.n_chan.size(), &rmf.n_chan[0],
+//		 rmf.matrix.size(), &rmf.matrix[0],
+//		 counts.size(), &counts[0],
+//		 rmf.offset);
 
 
 }
@@ -307,7 +309,7 @@ double MyModel::log_likelihood() const
         double logl = 0.;
 	    for(size_t i=0; i<f_mid.size(); i++)
 		{
-			logl += -0.5*log(2.*M_PI) - log(yerr[i]) - pow(y[i]-counts[i], 2)/(2.*pow(yerr[i], 2));
+			logl += -0.5*log(2.*M_PI) - log(yerr[i]) - pow(y[i]-mu[i], 2)/(2.*pow(yerr[i], 2));
  		}
 	return logl;
 }

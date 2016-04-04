@@ -11,18 +11,20 @@ int main(int argc, char** argv)
 	// parse command line options
 	CommandLineOptions options(argc, argv);
  
-        char datadir[50];
-        strcpy(datadir, "../data/cyg_daniela/");
+//        char datadir[50];
+//        strcpy(datadir, "../data/cyg_daniela/");
 
 	// get the data filename from the command line
-	Data::get_instance().load_data(datadir, options.get_data_file().c_str());
+//	Data::get_instance().load_data(datadir, options.get_data_file().c_str());
 //        cout<<"Loaded FITS file data ..."<<endl;
 
-        char text_file[128];
-        strcpy(text_file, "../data/test_noshift1.txt");
+//        char text_file[128];
+//        strcpy(text_file, "../data/test_noshift1.txt");
 
-        Data::get_instance().load(text_file);
-//        cout<<"Loaded text file data ..."<<endl;
+//        Data::get_instance().load(text_file);
+	 Data::get_instance().load(options.get_data_file().c_str());
+
+        cout<<"Loaded text file data ..."<<endl;
 
 
 	// file with line positions in same units as data; CURRENTLY HARDCODED!

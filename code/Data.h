@@ -12,9 +12,10 @@ typedef struct {
    char  filename[200];
 
    // the vectors with some of the data stuff;
-   std::vector<double> energ_lo, energ_hi, n_grp;
+   std::vector<double> energ_lo, energ_hi;
  
-   std::vector<double> f_chan, n_chan, matrix;
+   std::vector<int> f_chan, n_chan, n_grp;
+   std::vector<double>  matrix;
    //std::vector<std::valarray<float>> f_chan, n_chan, matrix;
 
    std::vector<int> e_min, e_max;

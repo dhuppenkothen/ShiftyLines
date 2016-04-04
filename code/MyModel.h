@@ -7,6 +7,9 @@
 #include "Data.h"
 #include "DNest4/code/RJObject/RJObject.h"
 #include <vector>
+#include <stdexcept>
+
+
  
 class MyModel
 {
@@ -24,11 +27,29 @@ class MyModel
 		double noise_sigma, noise_L;
 
 		// Poisson mean
-		std::vector<long double> mu;
+		// these should probably be long doubles
+		// need to fix that some time!
+		std::vector<double> mu;
+                std::vector<double> counts;
+
 
 		// Calculate mu from scratch:
 		void calculate_mu();
 
+
+		template <typename ConstIntType, typename ConstFloatType,
+            		typename FloatType, typename IndexType, typename UIndexType>
+
+		// Fold through RMF:
+		void rmf_fold(IndexType len_source, const ConstFloatType *source,
+                IndexType len_num_groups, const ConstIntType *num_groups,
+                IndexType len_first_chan, const ConstIntType *first_chan,
+                IndexType len_num_chans, const ConstIntType *num_chans,
+                IndexType len_response, const ConstFloatType *resp,
+                IndexType len_counts, FloatType *counts,
+                UIndexType offset);
+
+ 
 	public: 
 		// Constructor only gives size of params
 		MyModel();
