@@ -4,6 +4,7 @@
 #include "Lookup.h"
 #include <cmath>
 #include <stdexcept>
+#include <gsl/gsl_sf_gamma.h>
 
 using namespace std;
 using namespace DNest4;
@@ -11,12 +12,15 @@ using namespace DNest4;
 const Data& MyModel::data = Data::get_instance();
 const int& nlines = Data::get_instance().get_nlines();
 //const std::vector<double> line_pos = Data::get_instance().get_line_pos();
+const PHAData& pha = Data::get_instance().get_pha();
+
 
 MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
 :dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
-,noise_normals(data.get_f_left().size())
-,mu(data.get_pha().arf.specresp.size())
+,noise_normals(pha.bin_lo.size())
+//,mu(data.get_pha().arf.specresp.size())
+,mu(pha.counts.size())
 {
 }
 
@@ -108,19 +112,22 @@ void MyModel::calculate_mu()
 	vector<double> line_pos_shifted;
 
 	// get left and right boundaries of the wavelength bins
-        const vector<double>& f_left = data.get_f_left();
-        const vector<double>& f_right = data.get_f_right();
+        //const vector<double>& f_left = data.get_f_left();
+        //const vector<double>& f_right = data.get_f_right();
 
         // NEW VERSION: get PHA data from FITS file:
         // doesn't do anything yet, just testing whether I can load the data!
 	// NOTE: Just having this line in the code (uncommented, of course), makes
 	// the code slower by at least a factor of 3! Not sure why that is, but I 
 	// should probably figure that out
-        //const PHAData& pha = data.get_pha();
+        const PHAData& pha = data.get_pha();
+
+	const vector<double>& f_left = pha.bin_lo;
+	const vector<double>& f_right = pha.bin_hi;
 
 	// read out the ARF
-        //const vector<double> _arf = pha.arf.specresp;
-	//RMFData rmf = pha.rmf;
+        //const vector<double>& _arf = pha.arf.specresp;
+	//const RMFData& rmf = pha.rmf;
 
 	// assign constant background to model
 	mu.assign(mu.size(), background); //old version
@@ -177,10 +184,41 @@ void MyModel::calculate_mu()
 
 	}
 
+
+	/////// NOTE ////////////////////
+	// the code below cuts out a small part of the original spectrum for testing purposes. 
+	// NEED TO DELETE THIS ONCE EVERYTHING WORKS!!!!!
+        //
+
+        const vector<double>& f_mid_old = data.get_f_mid();
+        const vector<double>& f_mid = pha.bin_lo;
+
+
+        // I'm only interested in a specific region of the spectrum
+        // right now, so let's only look at that!
+        double f_min = f_mid_old[0];
+        double f_max = f_mid_old[f_mid_old.size()-1];
+
+
+        for (size_t k=0; k<pha.bin_lo.size(); k++)
+                {
+                        if (f_mid[k] < f_min)
+                                continue;
+                        if (f_mid[k] > f_max)
+                                continue;
+                        else
+                                {
+                                        mu_small.push_back(mu[k]);
+                                }
+
+                }
+
+
+
         // fold through the ARF
         // code taken from sherpa
-//        for (size_t ii = 0; ii < mu.size(); ii++ )
-//             mu[ ii ] *= _arf[ ii ];
+        for (size_t ii = 0; ii < mu.size(); ii++ )
+             mu[ ii ] *= pha.arf.specresp[ ii ];
 
 
         // Compute the OU process
@@ -203,20 +241,21 @@ void MyModel::calculate_mu()
         
 	for (size_t i=0; i<mu.size(); i++)
 		{
-			mu[i]  += mu_temp[i];//exp(mu_temp[i]);
+//			mu[i]  += mu_temp[i];//exp(mu_temp[i]);
 			if (mu[i] < 0.0)
 				mu[i] = 0.0;
 		}
 
-//        counts.assign(mu.size(), 0.0);
+        counts.assign(mu.size(), 0.0);
 
-//        rmf_fold(mu.size(), &mu[0], 
-//		 rmf.n_grp.size(), &rmf.n_grp[0],
-//             	 rmf.f_chan.size(), &rmf.f_chan[0],
-//		 rmf.n_chan.size(), &rmf.n_chan[0],
-//		 rmf.matrix.size(), &rmf.matrix[0],
-//		 counts.size(), &counts[0],
-//		 rmf.offset);
+
+        rmf_fold(mu.size(), &mu[0], 
+		 pha.rmf.n_grp.size(), &pha.rmf.n_grp[0],
+             	 pha.rmf.f_chan.size(), &pha.rmf.f_chan[0],
+		 pha.rmf.n_chan.size(), &pha.rmf.n_chan[0],
+		 pha.rmf.matrix.size(), &pha.rmf.matrix[0],
+		 counts.size(), &counts[0],
+		 pha.rmf.offset);
 
 
 }
@@ -302,14 +341,52 @@ double MyModel::perturb(RNG& rng)
 
 double MyModel::log_likelihood() const
 {
-        const vector<double>& f_mid = data.get_f_mid();
-        const vector<double>& y = data.get_y();
-	const vector<double>& yerr = data.get_yerr();
+        const vector<double>& f_mid_old = data.get_f_mid();
+
+//        const vector<double>& y = data.get_y();
+//	const vector<double>& yerr = data.get_yerr();
+	const PHAData& pha = data.get_pha();
+	const vector<double>& y = pha.counts;
+	const vector<double>& f_mid = pha.bin_lo;
+
+	// Very dumb approximation for error
+	// NEED TO IMPLEMENT POISSON LIKELIHOOD!!!
+        vector<double> yerr(y.size(), 0.0);
+
+	for (size_t j=0; j<y.size(); j++)
+		{
+			yerr[j] += sqrt(y[j]);
+		} 
+
+
+
+	// I'm only interested in a specific region of the spectrum
+	// right now, so let's only look at that!
+	double f_min = f_mid_old[0];
+	double f_max = f_mid_old[f_mid_old.size()-1];
+
+	vector<double> y_small, yerr_small, mu_small;
+	for (size_t k=0; k<y.size(); k++)
+		{
+			if (f_mid[k] < f_min)
+				continue;
+			if (f_mid[k] > f_max)
+				continue;
+			else
+				{
+					y_small.push_back(y[k]);
+					yerr_small.push_back(yerr[k]);
+					mu_small.push_back(mu[k]);
+				} 
+
+		}
 
         double logl = 0.;
-	    for(size_t i=0; i<f_mid.size(); i++)
+	    for(size_t i=0; i<y_small.size(); i++)
 		{
-			logl += -0.5*log(2.*M_PI) - log(yerr[i]) - pow(y[i]-mu[i], 2)/(2.*pow(yerr[i], 2));
+			logl += -mu_small[i] + y_small[i]*log(mu_small[i]) - gsl_sf_lngamma(y_small[i] + 1.);
+
+			//logl += -0.5*log(2.*M_PI) - log(yerr_small[i]) - pow(y_small[i]-mu_small[i], 2)/(2.*pow(yerr_small[i], 2));
  		}
 	return logl;
 }
@@ -320,7 +397,7 @@ void MyModel::print(std::ostream& out) const
         dopplershift.print(out);
 
 	for(size_t i=0; i<mu.size(); i++)
-		out<<mu[i]<<' ';
+		out<<mu_small[i]<<' ';
 
 }
 

@@ -2,7 +2,7 @@
 # called DNEST4_PATH for this to work.
 
 CXXFLAGS = -std=c++11 -O3 -Wall -Wextra -pedantic -DNDEBUG
-LIBS = -ldnest4 -lpthread -L/usr/local/lib/ -lCCfits -L/opt/local/lib/ -lcfitsio
+LIBS = -ldnest4 -lpthread -lgsl -lgslcblas -L/usr/local/lib/ -lCCfits -L/opt/local/lib/ -lcfitsio
 
 default:
 	g++ -I$(DNEST4_PATH) -I/usr/local/include/CCfits -I/opt/local/include $(CXXFLAGS) -c *.cpp

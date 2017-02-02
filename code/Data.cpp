@@ -14,6 +14,7 @@
 
 using namespace std;
 
+
 Data Data::instance;
 
 Data::Data()
@@ -39,24 +40,38 @@ void Data::load_data(const char* datadir, const char* filename)
   // get out the data
   CCfits::Column& column = spectrum.column("CHANNEL");
   column.read(pha.channel, 1, column.rows());
+
+  cout<<"first channel: "<<pha.channel[0]<<endl;
+  cout<<"last channel: "<<pha.channel[pha.channel.size()-1]<<endl;
   
   CCfits::Column& column2 = spectrum.column("COUNTS");
-  column.read(pha.counts, 1, column2.rows());
+  column2.read(pha.counts, 1, column2.rows());
+
+  cout<<"first count: "<<pha.counts[0]<<endl;
+  cout<<"last count: "<<pha.counts[pha.counts.size()-1]<<endl;
 
   CCfits::Column& column3 = spectrum.column("BIN_LO");
-  column.read(pha.bin_lo, 1, column3.rows());
+  column3.read(pha.bin_lo, 1, column3.rows());
+ 
+  cout<<"first bin_lo: "<<pha.bin_lo[0]<<endl;
+  cout<<"last bin_lo: "<<pha.bin_lo[pha.bin_lo.size()-1]<<endl;
 
   CCfits::Column& column4 = spectrum.column("BIN_HI");
-  column.read(pha.bin_hi, 1, column4.rows());
+  column4.read(pha.bin_hi, 1, column4.rows());
 
+  cout<<"first bin_hi: "<<pha.bin_hi[0]<<endl;
+  cout<<"last end_hi: "<<pha.bin_hi[pha.bin_hi.size()-1]<<endl;
   vector<double> bin_mid(pha.bin_lo.size(), 0.0);
 
   // compute the middle of the energy bins
   for(size_t i=0; i<pha.bin_lo.size(); i++){
-     bin_mid[i] = pha.bin_hi[i] - pha.bin_lo[i];   
+     bin_mid[i] = pha.bin_lo[i] + (pha.bin_hi[i] - pha.bin_lo[i])/2.0;   
   }
 
   pha.bin_mid = bin_mid;
+
+  cout<<"first bin_mid: "<<pha.bin_mid[0]<<endl;
+  cout<<"last bin_mid: "<<pha.bin_mid[pha.bin_mid.size()-1]<<endl;
 
   string respfile, ancrfile;
   // need to read some keys, too!
@@ -82,7 +97,7 @@ void Data::load_data(const char* datadir, const char* filename)
   pha.ncounts = pha.counts.size();
 
   // Print out the first value to check
-  cout<<"# Found "<< pha.ncounts <<" line positions in "<<pha.filename<<"."<<endl;
+  cout<<"# Found "<< pha.ncounts <<" data points in "<<pha.filename<<"."<<endl;
 
   // need to convert respfile from string to char
   const char *respfilechars = pha.respfile.c_str();
@@ -111,7 +126,8 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
   std::unique_ptr<CCfits::FITS> input_file(new CCfits::FITS(rmf.filename,CCfits::Read));
 
   // instantiate objects for temporary variables
-  std::vector<std::valarray<float>> f_chan, n_chan, mtx; 
+  std::vector<std::valarray<int>> f_chan, n_chan;
+  std::vector<std::valarray<double>>  mtx; 
 
   // point to correct HDU extension
   CCfits::ExtHDU& matrix = input_file->extension("MATRIX");

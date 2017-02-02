@@ -31,7 +31,7 @@ class MyModel
 		// need to fix that some time!
 		std::vector<double> mu;
                 std::vector<double> counts;
-
+		std::vector<double> mu_small;
 
 		// Calculate mu from scratch:
 		void calculate_mu();
