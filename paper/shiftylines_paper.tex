@@ -28,6 +28,7 @@
 \newcommand{\project}[1]{\textsl{#1}}
 \newcommand{\fermi}{\project{Fermi}}
 \newcommand{\rxte}{\project{RXTE}}
+\newcommand{\chandra}{\project{Chandra}}
 \newcommand{\given}{\,|\,}
 \newcommand{\dd}{\mathrm{d}}
 \newcommand{\counts}{y}
@@ -36,7 +37,7 @@
 \newcommand{\likelihood}{{\mathcal L}}
 \newcommand{\Poisson}{{\mathcal P}}
 \newcommand{\Uniform}{{\mathcal U}}
-\newcommand{\bg}{\mathrm{bg}}
+\newcommand{\bkg}{\mathrm{bkg}}
 \newcommand{\word}{\phi}
 
 \DeclareMathOperator\erf{erf}
@@ -83,32 +84,90 @@ spectral data), rather than prioritizing computational speed.
 
 \section{Method}
 
+\subsection{The Spectral Model}
 High-resolution spectral data consists of a continuum with a set of spectral lines superposed. A priori, we (approximately) know the rest frame wavelengths of the most common lines, but neither the amplitudes nor widths of these lines is known, thus they should be part of the inference process. Strictly speaking, because rest frame line positions in the spectrum are based on laboratory measurements, they have an uncertainty associated with them, too, but we currently do not take this uncertainty into account in the model.
 
- The objective, given a spectrum and a set of rest frame wavelengths of spectral lines, is to infer the amplitudes and widths of all (potential) lines at the same time as the one or several Doppler shifts affecting the centroid wavelengths of the spectral lines. Not all lines may be present in the data, but we consciously avoid performing model selection tasks for each individual line. Instead, we rephrase the problem as a parameter estimation task only, where the absence of a line will lead to a model preferring a very small amplitude for that line. This reflects our state of knowledge of the system: in practice, it is impossible to distinguish between the absence of a line and a line with a very small amplitude.
+The objective, given a spectrum and a set of rest frame wavelengths of spectral lines, is to infer the amplitudes and widths of all (potential) lines at the same time as the one or several Doppler shifts affecting the centroid wavelengths of the spectral lines. Not all lines may be present in the data, but we consciously avoid performing model selection tasks for each individual line. Instead, we rephrase the problem as a parameter estimation task only, where the absence of a line will lead to a model preferring a very small amplitude for that line. This reflects our state of knowledge of the system: in practice, it is impossible to distinguish between the absence of a line and a line with a very small amplitude.
+At the moment, for any Doppler shift $d_i = v_i/c$, all lines can be present. In principle, the model in its current form may model individual lines as mixtures of lines from several Doppler shifts. Depending on the system of interest, this may or may not have a physical motivation. 
 
-Each line $k$ is modelled as a Gaussian with location and scale parameters $\mu_k$ and $\sigma_k$ as well as an amplitude $A_k$, respectively. Note that $A_k$ is defined as the integrated flux over the line. We compute the line flux in each wavelength bin $j$ by integrating the model flux within the bin from the lower edge $\lambda_{j, \mathrm{low}}$ to the upper bin edge $\lambda_{j, \mathrm{high}}$:
+Each line $(i,k), \, k \in \{0, ..., K\}$ for a Doppler shift $d_i \in \{d_0, ..., D\}$ is modelled as a Gaussian with location and scale parameters $\mu_{i,k}$ and $\sigma_{i,k}$ as well as an amplitude $A_{i,k}$, respectively. Note that $A_{i,k}$ is defined as the integrated flux (or counts, depending on the units of the data) over the line. We compute the line flux in each wavelength bin $j$ by integrating the model flux $\mean_j$ within the bin from the lower edge $\lambda_{j, \mathrm{low}}$ to the upper bin edge $\lambda_{j, \mathrm{high}}$:
 
 \begin{eqnarray}
-\mean_j & = &  \sum_{k=1}^{K}{\int^{\lambda_{j,\mathrm{high}}}_{\lambda_{j, \mathrm{low}}}{\frac{A_k}{\sigma_k\sqrt{2\pi}} \exp{(-(\lambda-\mu_k)/{2\sigma_k^2})}}} \\ \nonumber
-& = & \frac{1}{2}\sum_{k=1}^{K} A_k\left[ \erf{\left( \frac{\lambda_{j,\mathrm{high}} - \mu_k}{\sigma_k\sqrt{2}}\right)} - \erf{\left( \frac{\lambda_{j, \mathrm{low}} - \mu_k}{\sigma_k\sqrt{2}}\right)} \right] \; ,
+\mean_{\mathrm{lines},j} & = &  \sum_{i=1}^{D}\sum_{k=1}^{K}{\int^{\lambda_{j,\mathrm{high}}}_{\lambda_{j, \mathrm{low}}}{\frac{A_{k}}{\sigma_{k}\sqrt{2\pi}} \exp{(-(\lambda-\mu_{k})/{2\sigma_{k}^2})}}} \\ \nonumber
+& = & \frac{1}{2}  \sum_{i=1}^{D} \sum_{k=1}^{K} A_{i,k}\left[ \erf{\left( \frac{\lambda_{j,\mathrm{high}} - \mu_{k}}{\sigma_{k}\sqrt{2}}\right)} - \erf{\left( \frac{\lambda_{j, \mathrm{low}} - \mu_{k}}{\sigma_{i,k}\sqrt{2}}\right)} \right] \; ,
 \end{eqnarray}
 
 \noindent where $j$ is the index of a wavelength bin and $\erf$ defines the error function. 
 
-X-ray spectra have very noticeable continuum contributions as well as calibration that needs to be performed on the data. In most high-resolution spectra, the continuum will be fit separately to the data and then divided out before attempting line fits. In principle, the statistically consistent approach to the model we propose here would be to fit continuum parameters at the same time as the spectral lines. Because both continuum modelling and calibration is a non-trivial task for high-resolution spectroscopy, we do not attempt in this work to include this contribution, but note that there is scope for improvement in this direction in the future. 
-Instead, we choose a simple model to account for residual continuum contributions and potential biases due to incorrect calibration by modeling the continuum by a combination of a simple constant model and an autoregressive process called an Ornstein-Uhlenbeck (OU) process. The latter is a damped random walk capable of modelling trends in the data as well as smaller irregularities. It adds two parameters to the model: a length scale $\tau$ describing the interval within which correlations are important, and an amplitude $A_{\mathrm{OU}}$ describing the variance of the induced fluctuations. 
-We regard these parameters as nuisance parameters, which will be sampled along with the remaining parameters of the model 
+X-ray spectra have very noticeable continuum contributions as well as calibration that needs to be performed on the data. In most high-resolution spectra, the continuum and spectral lines will be fit together with the continuum, though the presence of individual lines must be confirmed via hypothesis testing. Response matrices describing the calibration effects are generated in advance and applied---depending on the software being used---either on the data itself, to move the data from the detector space into the flux space corresponding to the emission incident on the detector, or on the model, moving the model into the detector space instead. In general, calibration for any instrument is rarely complete, and residuals from imperfect calibration may remain in the data. 
+In principle, the statistically consistent approach to the model we propose here would be to include both various choices for calibration as well as the parameters of the model describing the continuum in the same model as the spectral lines and sample all model components together. Because both continuum modelling and calibration is a non-trivial task for high-resolution spectroscopy, we do not attempt in this work to include this contribution, but note that there is scope for improvement in this direction in the future. %%% Note to self: This might need to change if we actually do include continuum models!
+It is also often the case that the high-resolution spectra observed with e.g.\ \chandra\ require different calibration at different wavelengths, thus one often separates the spectrum into two or more intervals which are calibrated and subsequently modelled independently. In this case, a full continuum model is often unnecessary and supplanted either by a power law or a spline modelling the remainder of the continuum. While the latter approach discards valuable information by modelling intervals independently even though they belong to the same source spectrum, for the purposes of this work, it makes the analysis considerably easier.
+We choose a simple model to account for residual continuum contributions and potential biases due to incorrect calibration by modeling the continuum by a combination of a simple constant model $\mean_{\mathrm{bkg}}$ and an autoregressive process called an Ornstein-Uhlenbeck (OU) process. The latter is a damped random walk capable of modelling trends in the data as well as smaller irregularities. It adds two parameters to the model: a length scale $\tau_{\mathrm{OU}}$ describing the interval within which correlations are important, and an amplitude $A_{\mathrm{OU}}$ describing the variance of the induced fluctuations. 
+We regard these parameters as nuisance parameters, which will be sampled along with the remaining parameters of the model and integrated out for the final parameter estimates. 
+Thus, the complete model for an observed X-ray spectrum is
 
- 
+\begin{equation}
+\label{eqn:modelflux}
+m_j = m_{\mathrm{lines},j} + m_{\mathrm{bkg}}*\mathrm{OU}(\lambda_j, \tau_{\mathrm{OU}}, A_{\mathrm{OU}} \; .
+\end{equation}
 
+\noindent This assumes that the spectral lines are independent of any continuum and calibration errors that were not removed in the pre-processing. 
 
-\subsection{Assumptions}
+\subsection{The hierarchical model}
 
-\subsubsection{Priors}
+We now build a hierarchical model to infer the number of different Doppler shifts present in the data, the values of $d_i$ themselves as well as the line properties ${\pars_{i,k}}$ for each line $k$ and each Doppler shift $d_i$. In order to keep the model fairly simple, we assume that the line amplitudes and widths for different Doppler shifts share the same priors. This may not be a reasonable assumption for all spectral modelling problems, and we note that in future versions, this may be changed, though at the moment we prefer simplicity over complexity. 
 
-Here we list all the priors in the model.
+In addition, we also infer a number of hyperparameters $\alpha$ describing the prior distributions for the line widths and amplitudes (see Section \ref{sec:priors} for details) as well as the constant background and the parameters of the OU process: $\beta = \{\mean_{\bkg}, \tau_{\mathrm{OU}}, A_{\mathrm{OU}}\}$.
 
+The posterior distribution over all the parameters takes the form
+
+\begin{eqnarray}
+p(D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} \given  \bm{\counts}, H) & = & \likelihood(D, \{d_i\}, \bm{\alpha}, \beta, \{\bm{\pars_{i,k}}\}) \\\nonumber
+					& & \times \pi(D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} \given H) \\\nonumber
+					& &  / p(\bm{\counts} \given H)\; ,
+\end{eqnarray} 
+
+\noindent where $\likelihood(D, \{d_i\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\})$ describes the likelihood of the data and $\pi(D, \{d_i\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\} $ the prior. $H$ stands in as a place-holder for all other assumptions made in the model, including the shape of the priors and the sampling distribution chosen in the likelihood. The distribution $p(\bm{\counts} \given H)$ is called the marginal likelihood or Bayesian evidence and in effect a normalization that ensures the posterior to be a proper probability distribution:
+
+\begin{eqnarray}
+p(\bm{\counts} \given H) & = & \int_\Omega{ \likelihood(D, \{d_i\}, \bm{\alpha}, \beta, \{\bm{\pars_{i,k}}\}) } \\\nonumber
+					& &{ \times \pi(D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} \given H) d\Omega} \; ,
+\end{eqnarray}
+
+\noindent where $\Omega$ describes the volume of the entire parameter space allowed by the prior. The marginal likelihood is of use in particular in a model comparison context, where it is used to compute the posterior of a model $H$ given the data $\bm{\counts}$: $p(H \given \bm{\counts}) \propto p(D \given H) p(H)$. In practice, however, it is a high-dimensional integral with generally no analytic solution and thus often very difficult to compute.
+
+The likelihood is defined as the probability of observing the data $\bm{\counts}$ given a specific set of hyperparameters $\alpha$, and parameters $\beta$, $D$ and $\{\pars_{i,k}$. Because we work mostly with high signal-to-noise data in flux space, and much of it has been pre-processed, we choose a Gaussian sampling distribution, such that the likelihood becomes:
+
+\begin{eqnarray}
+\likelihood(D, \bm{\alpha}, \{\bm{\pars_{i,k}}\}) & = & p(\bm{\counts} \given D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\}, H) \\ \nonumber
+			& = & \prod_{j=1}^{J}{p(\counts_j \given D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\}, H)} \\\nonumber
+			& = & \prod_{j=1}^{J}{\frac{1}{\sigma_j \sqrt{2\pi}}\exp{\left(\frac{(\counts_j - \mean_j)^2}{2\sigma_j^2} \right)}} \; ,
+\end{eqnarray}	
+\noindent where $\sigma_j$ describes the uncertainty on the $j$th data point and $\mean_j$ describes the model flux as defined in Equation \ref{eqn:modelflux}. In reality, we compute the logarithm of the likelihood, which simply reduces to
+
+\begin{eqnarray}
+\log{\likelihood(D, \{d_i\}, \bm{\alpha}, \{\bm{\pars_{i,k}}\})} = & \sum_{j=1}^{J} & \left[ -\log{\sigma_j} - \log{\sqrt{2\pi}} \right. \\ \nonumber
+					 & & \left. -\frac{1}{\sigma_j \sqrt{2\pi}}\left(\frac{(\counts_j - \mean_j)^2}{2\sigma_j^2} \right)\right] \; .
+\end{eqnarray}
+
+For the prior distributions, we assume independence between the individual parameters as well as hyperparameters, such that the 
+prior  $\pi(D, \{d_i\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} $ can be split up into simpler distributions:
+
+\begin{eqnarray}
+\pi(D, \{d_i\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\} ) & = &  p(D \given H) p(\bm{\alpha} \given H) p(\bm{\beta} \given H)   \nonumber \\	
+					& & \times \prod_{i=1}^{D}{\left[p(d_i \given H) \prod_{k=1}^{K}{p( \{\bm{\pars_{i,k}}\} \given \bm{\alpha}, H)}\right]} 
+\end{eqnarray}
+
+The details of the prior distributions chosen for this work are listed in the subsequent section.
+
+\subsection{Priors}
+\label{sec:priors}
+
+As much as possible, priors were chosen that correspond to physical constraints on the system being studied, and non-informative priors were chosen where this was not possible. 
+
+We choose Laplace prior distributions for the line amplitudes and widths. The Laplace distribution is similar to the normal distribution in that the tails are exponential, and was chosen over the normal distribution predominantly for being somewhat numerically easier to implement. The choice of one prior distribution for all line amplitudes and widths intrinsically assumes that all line amplitudes and widths are drawn from the same distribution, whereas in reality this may not be true for different elements or different ions. Again, this choice was made to keep the model manageable in its first iteration when used on relatively simple spectra, but we may consider choosing more physically motivated priors for more challenging data in the future.
+The primary concern when making this choice is that if a spectrum contains very strong lines while at the same time missing lines at positions being sampled, the prior might inadvertently sample lower amplitudes for the strong lines or infer larger line amplitudes for the lines missing from the data.
+We mitigate this potential problem also sampling over the location and scale parameters of the Laplacian distributions for width and amplitudes. This allows a fairly flexible range of models by potentially making very wide prior distributions if the widths and amplitudes of lines are very different in the spectrum.
 
 \begin{table*}[hbtp]
 \renewcommand{\arraystretch}{1.3}
@@ -124,15 +183,22 @@ Here we list all the priors in the model.
 \it{Hyperparameters} && \\ \midrule
 $\mu_{\log{A}}$ & Mean of Laplacian prior distribution for line amplitude $\log{A}$ &   $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$  \\
 $\sigma_{\log{A}}$ & Standard deviation of Laplacian prior distribution for line amplitude $\log{A}$ & $\mathrm{Uniform}(0,2)$ \\
-$\mu_{\log{q}}$ & Mean of Laplacian prior distribution for the $q$-factor $\log{q}$ & $\mathrm{Uniform}(\log{100}, \log{1000})$  \\
-$\sigma_{\log{q}}$ & Standard deviation of the Laplacian prior distribution for the $q$-factor $\log{q}$ & $\mathrm{Uniform}(\log{0}, \log{0.3})$\\ 
+$\mu_{\log{w}}$ & Mean of Laplacian prior distribution for the log-width $\log{w}$ & $\mathrm{Uniform}(\log{\min{\Delta\lambda}/5}, \log{0.1})$  \\
+$\sigma_{\log{w}}$ & Standard deviation of the Laplacian prior distribution for the log-width $\log{w}$ & $\mathrm{Uniform}(\log{0}, \log{0.3})$\\ 
+$\alpha$ & Threshold parameter for the amplitude signs (determining emission/absorption lines) &  $\mathrm{Uniform}(0,1)$\\
 \midrule
 \it{Individual Spectral Line Parameters} && \\ \midrule
-$\log{A_i}$ & logarithm of the amplitude of line $i$ & $\mathrm{Laplacian}(\mu_A \sigma_A)$ \\
-$\log{q_i}$ & logarithm of $q_i = \lambda_{\mathrm{line}_{i}}/\sigma_{\mathrm{line}_{i}}$ & $\mathrm{Laplacian}(\mu_q, \sigma_q)$ \\
+$\log{A_k}$ & logarithm of the amplitude of line $k$ & $\mathrm{Laplacian}(\mu_A \sigma_A)$ \\
+$\log{w_k}$ & logarithm of the line width & $\mathrm{Laplacian}(\mu_{\log{w}}, \sigma_{\log{w}})$ \\
 $\log{\counts}_{\mathrm{bkg}}$ & logarithm of the background flux & $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$ \\
+$s_k$ & sign of each spectral line (determining either emission or absorption line) &  $\mathrm{Uniform}(0,1)$\\
+\midrule
+\it{Other Model Parameters} && \\ \midrule
 $d = v/c$ & Doppler shift $d$ parametrized as a function of velocity $v$ and speed of light $c$ & $\mathrm{Uniform}(-0.1, 0.1)$ \\
-$N$ & Number of possible Doppler shifts & $\mathrm{Uniform}(0,5)$  \\\bottomrule
+$N$ & Number of possible Doppler shifts & $\mathrm{Uniform}(0,5)$  \\
+$\log{A_{\mathrm{OU}}}$ & Amplitude of the OU process & \\
+$\log{\tau_{\mathrm{OU}}}$ & length scale of the OU process & \\
+\bottomrule
 \end{tabularx}
    \begin{tablenotes}
       %\footnotesize
@@ -161,6 +227,9 @@ This is a problem that makes all sampling algorithms fail, and requires careful 
 
 \section{Results}
 
+\subsection{Testing prior assumptions}
+
+How much do our results change if we change the priors? Need to test that!
 
 \section{Discussions}
 
@@ -170,6 +239,8 @@ This is a problem that makes all sampling algorithms fail, and requires careful 
 DH was supported by the Moore-Sloan Data Science Environment at NYU.
 BJB was supported by a Marsden Fast-Start grant from the Royal Society of
 New Zealand.
+
+We thank David Huijser (Auckland) for help with {\tt CCFits}.
 
 \bibliography{td}
 \bibliographystyle{apj}
