@@ -109,7 +109,7 @@ void MyModel::calculate_mu()
 	const vector<double>& line_pos = data.get_line_pos();
 
 	// declare shifted line positions
-	vector<double> line_pos_shifted;
+	vector<double> line_pos_shifted(line_pos.size());
 
 	// get left and right boundaries of the wavelength bins
         //const vector<double>& f_left = data.get_f_left();
@@ -125,94 +125,62 @@ void MyModel::calculate_mu()
 	const vector<double>& f_left = pha.bin_lo;
 	const vector<double>& f_right = pha.bin_hi;
 
-	// read out the ARF
-        //const vector<double>& _arf = pha.arf.specresp;
-	//const RMFData& rmf = pha.rmf;
-
 	// assign constant background to model
 	mu.assign(mu.size(), background); //old version
+
  
 	// get amplitudes and widths from the RJObject 
 	const vector< vector<double> >& dopplershiftcomponents = dopplershift.get_components();
  
-//	vector<double> amplitude, logq, sign, width;
-	vector<double> amplitude, sign, width;
+	vector<double> amplitude(nlines), sign(nlines), width(nlines);
 	double dshift;
 
-	vector<double> mu_temp(mu.size(), 0.0);
+//        // I'm only interested in a specific region of the spectrum
+//        // right now, so let's only look at that!
+	const double& f_min = data.get_f_min();
+        const double& f_max = data.get_f_max();
+
 
         for(size_t j=0; j<dopplershiftcomponents.size(); j++)
         {
-	        // assign 0 to all shifted line positions
-	        line_pos_shifted.assign(line_pos.size(), 0.0);
 
-		amplitude.assign(nlines, 0.);
-//		logq.assign(nlines, 0.);
-		sign.assign(nlines, 0.);
-		width.assign(nlines, 0.);
-
-		dshift = dopplershiftcomponents[j][0];
+			dshift = dopplershiftcomponents[j][0];
 	
-		for (int i=0; i<nlines; i++)
-			{
-				line_pos_shifted[i] = line_pos[i]*(1. + dshift);
-				amplitude[i] = exp(dopplershiftcomponents[j][i+1]);
-				//logq[i] = dopplershiftcomponents[j][i+1+nlines];
-				sign[i] = dopplershiftcomponents[j][i+1+2*nlines];		
-				width[i] = exp(dopplershiftcomponents[j][i+1+nlines]);
-			}
-	
-		
-		int s=0;	
-                for(size_t i=0; i<mu.size(); i++)
-                {
-			for (int k=0; k<nlines; k++)
+			for (int i=0; i<nlines; i++)
 				{
-			// Integral over the Lorentzian distribution
-					if (sign[k] < dopplershift.get_conditional_prior().get_pp()) 
-						s = -1;
-					else 
-						s = 1;
- 
-				//	mu_temp[i] += s*amplitude[k]/(width[k]*sqrt(2.*M_PI))*exp(-pow(f_mid[i]-line_pos_shifted[k],2)/(2.*pow(width[k],2)));
-					mu_temp[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
-								- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
-
+					line_pos_shifted[i] = line_pos[i]*(1. + dshift);
+					amplitude[i] = exp(dopplershiftcomponents[j][i+1]);
+					//logq[i] = dopplershiftcomponents[j][i+1+nlines];
+      					sign[i] = dopplershiftcomponents[j][i+1+2*nlines];		
+					width[i] = exp(dopplershiftcomponents[j][i+1+nlines]);
 				}
+		
+			int s=0;	
+        	        for(size_t i=0; i<mu.size(); i++)
+        	        {
+		                if (f_left[i] < f_min)                        
+		                       continue;
+		                if (f_right[i] > f_max)
+	        	               continue;
+	       		        else
+	                	{       
 
-                } 
 
+					for (int k=0; k<nlines; k++)
+						{
+						// Integral over the Lorentzian distribution
+						if (sign[k] < dopplershift.get_conditional_prior().get_pp()) 
+							s = -1;
+						else 
+							s = 1;
+ 
+						mu[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
+									- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
+
+						}
+                		}	 
+			}
 	}
-
-
-	/////// NOTE ////////////////////
-	// the code below cuts out a small part of the original spectrum for testing purposes. 
-	// NEED TO DELETE THIS ONCE EVERYTHING WORKS!!!!!
-        //
-
-        const vector<double>& f_mid_old = data.get_f_mid();
-        const vector<double>& f_mid = pha.bin_lo;
-
-
-        // I'm only interested in a specific region of the spectrum
-        // right now, so let's only look at that!
-        double f_min = f_mid_old[0];
-        double f_max = f_mid_old[f_mid_old.size()-1];
-
-
-        for (size_t k=0; k<pha.bin_lo.size(); k++)
-                {
-                        if (f_mid[k] < f_min)
-                                continue;
-                        if (f_mid[k] > f_max)
-                                continue;
-                        else
-                                {
-                                        mu_small.push_back(mu[k]);
-                                }
-
-                }
-
 
 
         // fold through the ARF
@@ -226,38 +194,45 @@ void MyModel::calculate_mu()
         double alpha = exp(-1./noise_L);
 
 	// noise process could come both from the source or the detector!
-	// which is why I put it in between the ARF and the RMF
-        for(size_t i=0; i<mu.size(); i++)
-        {
-                if(i==0)
-                        y[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals[i];
-                else
-                        y[i] = alpha*y[i-1] + noise_sigma*noise_normals[i];
-                mu[i] *= exp(y[i]);
-        }
+ 	// which is why I put it in between the ARF and the RMF
+	for(size_t i=0; i<mu.size(); i++)
+	{
+		if (f_left[i] < f_min)
+			continue;
+		if (f_right[i] > f_max)
+             		continue;
+
+	        if(f_left[i] < f_min & f_right[i] > f_min )
+	                y[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals[i];
+	        else
+	                y[i] = alpha*y[i-1] + noise_sigma*noise_normals[i];
+	        mu[i] *= exp(y[i]);
+	}
 
 
-	// Remove all counts < zero, because that would be just silly!
-        
-	for (size_t i=0; i<mu.size(); i++)
-		{
-//			mu[i]  += mu_temp[i];//exp(mu_temp[i]);
-			if (mu[i] < 0.0)
-				mu[i] = 0.0;
-		}
-
+//	// Remove all counts < zero, because that would be just silly!
+//        
+//	for (size_t i=0; i<mu.size(); i++)
+//		{
+////			mu[i]  += mu_temp[i];//exp(mu_temp[i]);
+//			if (mu[i] < 0.0)
+//				mu[i] = 0.0;
+//		}
+//
         counts.assign(mu.size(), 0.0);
 
 
         rmf_fold(mu.size(), &mu[0], 
-		 pha.rmf.n_grp.size(), &pha.rmf.n_grp[0],
-             	 pha.rmf.f_chan.size(), &pha.rmf.f_chan[0],
-		 pha.rmf.n_chan.size(), &pha.rmf.n_chan[0],
-		 pha.rmf.matrix.size(), &pha.rmf.matrix[0],
-		 counts.size(), &counts[0],
-		 pha.rmf.offset);
+	  pha.rmf.n_grp.size(), &pha.rmf.n_grp[0],
+	  pha.rmf.f_chan.size(), &pha.rmf.f_chan[0],
+	  pha.rmf.n_chan.size(), &pha.rmf.n_chan[0],
+	  pha.rmf.matrix.size(), &pha.rmf.matrix[0],
+	  counts.size(), &counts[0],
+	  pha.rmf.offset);
 
 
+	mu.resize(data.get_pha().bin_lo.size());
+	
 }
 
 void MyModel::from_prior(RNG& rng)
@@ -393,11 +368,11 @@ double MyModel::log_likelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
-        out<<background<<' '<<noise_L<<' '<<noise_sigma<<' ';
+        //out<<background<<' '<<noise_L<<' '<<noise_sigma<<' ';
         dopplershift.print(out);
 
 	for(size_t i=0; i<mu.size(); i++)
-		out<<mu_small[i]<<' ';
+		out<<mu[i]<<' ';
 
 }
 
