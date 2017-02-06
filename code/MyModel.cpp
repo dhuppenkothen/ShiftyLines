@@ -202,7 +202,7 @@ void MyModel::calculate_mu()
 		if (f_right[i] > f_max)
              		continue;
 
-	        if(f_left[i] < f_min & f_right[i] > f_min )
+	        if((f_left[i] < f_min) & (f_right[i] > f_min ))
 	                y[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals[i];
 	        else
 	                y[i] = alpha*y[i-1] + noise_sigma*noise_normals[i];
