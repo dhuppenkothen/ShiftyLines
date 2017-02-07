@@ -55,4 +55,7 @@ code/*.swn
 code/*.swo
 code/*.swp
 *.swp
-demos/
+paper/shiftylines_paperNotes.bib
+demos/Scratch.ipynb
+demos/test_extended_shift2.txt
+demos/test_extended_shift2_data.pkl
