@@ -20,7 +20,7 @@ const PHAData& pha_heg_m1 = Data::get_instance().get_pha_heg_m1();
 
 MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
-:dopplershift(3*nlines+2, 4, false, MyConditionalPrior())
+:dopplershift(3*nlines+4, 4, false, MyConditionalPrior())
 ,noise_normals(pha_heg_p1.bin_lo.size())
 //,mu(data.get_pha().arf.specresp.size())
 ,mu1(pha_heg_p1.counts.size())
