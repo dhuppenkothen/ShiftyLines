@@ -38,7 +38,7 @@ def rewrite_options(nlevels=200, dnest_dir="./"):
     mdata = mfile.readlines()
     mfile.close()
 
-    mdata[-4] = '%i\t# maximum number of levels\n'%nlevels
+    mdata[6] = '%i\t# maximum number of levels\n'%nlevels
 
     mwrite_file = open(dnest_dir+"OPTIONS.tmp", "w")
 
