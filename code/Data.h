@@ -72,6 +72,10 @@ class Data
 
 		//std::vector<double> channel, counts, bin_lo, bin_hi;
 	
+		PHAData pha_heg_p1;
+//                PHAData pha_meg_p1;
+                PHAData pha_heg_m1;
+//                PHAData pha_meg_m1;
 		PHAData pha;
    		RMFData rmf;
 		ARFData arf;	
@@ -92,7 +96,7 @@ class Data
       		void load_data(const char* datadir, const char* filename);
 		RMFData load_rmf(const char* datadir, const char* filename);
                 ARFData load_arf(const char* datadir, const char* filename);
-
+                PHAData load_fits(const char* datadir, const char* filename);
 		// Getters
 		const std::vector<double>& get_f_mid() const { return f_mid; }
 		const std::vector<double>& get_df() const { return df; }
@@ -101,7 +105,10 @@ class Data
 		const std::vector<double>& get_y() const { return y; }
 		const std::vector<double>& get_yerr() const { return yerr; }
 		const std::vector<double>& get_line_pos() const { return lines; }
-                const PHAData& get_pha() const { return pha; }
+                const PHAData& get_pha_heg_p1() const { return pha_heg_p1; }
+                const PHAData& get_pha_heg_m1() const { return pha_heg_m1; }
+//                const PHAData& get_pha_meg_p1() const { return pha_meg_p1; }
+//                const PHAData& get_pha_meg_m1() const { return pha_meg_m1; }
 
 		double get_f_min() const { return f_min; }
 		double get_f_max() const { return f_max; }

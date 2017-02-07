@@ -12,15 +12,19 @@ using namespace DNest4;
 const Data& MyModel::data = Data::get_instance();
 const int& nlines = Data::get_instance().get_nlines();
 //const std::vector<double> line_pos = Data::get_instance().get_line_pos();
-const PHAData& pha = Data::get_instance().get_pha();
+const PHAData& pha_heg_p1 = Data::get_instance().get_pha_heg_p1();
+const PHAData& pha_heg_m1 = Data::get_instance().get_pha_heg_m1();
+//const PHAData& pha_meg_p1 = Data::get_instance().get_pha_meg_p1();
+//const PHAData& pha_meg_m1 = Data::get_instance().get_pha_meg_m1();
 
 
 MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
-:dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
-,noise_normals(pha.bin_lo.size())
+:dopplershift(3*nlines+2, 4, false, MyConditionalPrior())
+,noise_normals(pha_heg_p1.bin_lo.size())
 //,mu(data.get_pha().arf.specresp.size())
-,mu(pha.counts.size())
+,mu1(pha_heg_p1.counts.size())
+,mu2(pha_heg_m1.counts.size())
 {
 }
 
@@ -120,13 +124,13 @@ void MyModel::calculate_mu()
 	// NOTE: Just having this line in the code (uncommented, of course), makes
 	// the code slower by at least a factor of 3! Not sure why that is, but I 
 	// should probably figure that out
-        const PHAData& pha = data.get_pha();
 
-	const vector<double>& f_left = pha.bin_lo;
-	const vector<double>& f_right = pha.bin_hi;
+	const vector<double>& f_left = pha_heg_p1.bin_lo;
+	const vector<double>& f_right = pha_heg_p1.bin_hi;
 
 	// assign constant background to model
-	mu.assign(mu.size(), background); //old version
+	mu1.assign(mu1.size(), background1); //old version
+        mu2.assign(mu2.size(), background2); //old version
 
  
 	// get amplitudes and widths from the RJObject 
@@ -156,7 +160,7 @@ void MyModel::calculate_mu()
 				}
 		
 			int s=0;	
-        	        for(size_t i=0; i<mu.size(); i++)
+        	        for(size_t i=0; i<mu1.size(); i++)
         	        {
 		                if (f_left[i] < f_min)                        
 		                       continue;
@@ -174,9 +178,9 @@ void MyModel::calculate_mu()
 						else 
 							s = 1;
  
-						mu[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
+						mu1[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
 									- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
-
+						mu2[i] = mu1[i];
 						}
                 		}	 
 			}
@@ -185,17 +189,19 @@ void MyModel::calculate_mu()
 
         // fold through the ARF
         // code taken from sherpa
-        for (size_t ii = 0; ii < mu.size(); ii++ )
-             mu[ ii ] *= pha.arf.specresp[ ii ];
-
+        for (size_t ii = 0; ii < mu1.size(); ii++ )
+		{
+             		mu1[ ii ] *= pha_heg_p1.arf.specresp[ ii ];
+             		mu2[ ii ] *= pha_heg_m1.arf.specresp[ ii ];
+		}
 
         // Compute the OU process
-        vector<double> y(mu.size());
+        vector<double> y(mu1.size());
         double alpha = exp(-1./noise_L);
 
 	// noise process could come both from the source or the detector!
  	// which is why I put it in between the ARF and the RMF
-	for(size_t i=0; i<mu.size(); i++)
+	for(size_t i=0; i<mu1.size(); i++)
 	{
 		if (f_left[i] < f_min)
 			continue;
@@ -206,39 +212,44 @@ void MyModel::calculate_mu()
 	                y[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals[i];
 	        else
 	                y[i] = alpha*y[i-1] + noise_sigma*noise_normals[i];
-	        mu[i] *= exp(y[i]);
+	        mu1[i] *= exp(y[i]);
+                mu2[i] *= exp(y[i]);
+
 	}
 
-
-//	// Remove all counts < zero, because that would be just silly!
-//        
-//	for (size_t i=0; i<mu.size(); i++)
-//		{
-////			mu[i]  += mu_temp[i];//exp(mu_temp[i]);
-//			if (mu[i] < 0.0)
-//				mu[i] = 0.0;
-//		}
-//
-        counts.assign(mu.size(), 0.0);
+        counts1.assign(mu1.size(), 0.0);
+        counts2.assign(mu2.size(), 0.0);
 
 
-        rmf_fold(mu.size(), &mu[0], 
-	  pha.rmf.n_grp.size(), &pha.rmf.n_grp[0],
-	  pha.rmf.f_chan.size(), &pha.rmf.f_chan[0],
-	  pha.rmf.n_chan.size(), &pha.rmf.n_chan[0],
-	  pha.rmf.matrix.size(), &pha.rmf.matrix[0],
-	  counts.size(), &counts[0],
-	  pha.rmf.offset);
+        rmf_fold(mu1.size(), &mu1[0], 
+	  pha_heg_p1.rmf.n_grp.size(), &pha_heg_p1.rmf.n_grp[0],
+	  pha_heg_p1.rmf.f_chan.size(), &pha_heg_p1.rmf.f_chan[0],
+	  pha_heg_p1.rmf.n_chan.size(), &pha_heg_p1.rmf.n_chan[0],
+	  pha_heg_p1.rmf.matrix.size(), &pha_heg_p1.rmf.matrix[0],
+	  counts1.size(), &counts1[0],
+	  pha_heg_p1.rmf.offset);
+
+        rmf_fold(mu2.size(), &mu2[0],
+          pha_heg_m1.rmf.n_grp.size(), &pha_heg_m1.rmf.n_grp[0],
+          pha_heg_m1.rmf.f_chan.size(), &pha_heg_m1.rmf.f_chan[0],
+          pha_heg_m1.rmf.n_chan.size(), &pha_heg_m1.rmf.n_chan[0],
+          pha_heg_m1.rmf.matrix.size(), &pha_heg_m1.rmf.matrix[0],
+          counts2.size(), &counts2[0],
+          pha_heg_m1.rmf.offset);
 
 
-	mu.resize(data.get_pha().bin_lo.size());
-	
+	mu1.resize(data.get_pha_heg_p1().bin_lo.size());
+        mu2.resize(data.get_pha_heg_m1().bin_lo.size());
+
 }
 
 void MyModel::from_prior(RNG& rng)
 {
-	background = tan(M_PI*(0.97*rng.rand() - 0.485));
-	background = exp(background);
+	background1 = tan(M_PI*(0.97*rng.rand() - 0.485));
+	background1 = exp(background1);
+        background2 = tan(M_PI*(0.97*rng.rand() - 0.485));
+        background2 = exp(background2);
+
 	dopplershift.from_prior(rng);
 
 	// this, too belongs to the noise process we're not using 
@@ -284,17 +295,27 @@ double MyModel::perturb(RNG& rng)
 	}
 	else
 	{
-		which = rng.rand_int(3);
+		which = rng.rand_int(4);
 		if(which == 0)
 		{
-			background = log(background);
-			background = (atan(background)/M_PI + 0.485)/0.97;
-			background += rng.randh();
-			background = mod(background, 1.);
-			background = tan(M_PI*(0.97*background - 0.485));
-			background = exp(background);
+			background1 = log(background1);
+			background1 = (atan(background1)/M_PI + 0.485)/0.97;
+			background1 += rng.randh();
+			background1 = mod(background1, 1.);
+			background1 = tan(M_PI*(0.97*background1 - 0.485));
+			background1 = exp(background1);
 		}
-		if(which == 1)
+                if(which == 1)
+                {
+                        background2 = log(background2);
+                        background2 = (atan(background2)/M_PI + 0.485)/0.97;
+                        background2 += rng.randh();
+                        background2 = mod(background2, 1.);
+                        background2 = tan(M_PI*(0.97*background2 - 0.485));
+                        background2 = exp(background2);
+                }
+
+		if(which == 2)
 		{
 			noise_sigma = log(noise_sigma);
 			noise_sigma += log(1E3)*rng.randh();
@@ -320,59 +341,42 @@ double MyModel::log_likelihood() const
 
 //        const vector<double>& y = data.get_y();
 //	const vector<double>& yerr = data.get_yerr();
-	const PHAData& pha = data.get_pha();
-	const vector<double>& y = pha.counts;
-	const vector<double>& f_mid = pha.bin_lo;
+	const PHAData& pha_heg_p1 = data.get_pha_heg_p1();
+        const PHAData& pha_heg_m1 = data.get_pha_heg_m1();
 
-	// Very dumb approximation for error
-	// NEED TO IMPLEMENT POISSON LIKELIHOOD!!!
-        vector<double> yerr(y.size(), 0.0);
-
-	for (size_t j=0; j<y.size(); j++)
-		{
-			yerr[j] += sqrt(y[j]);
-		} 
-
-
+	const vector<double>& y1 = pha_heg_p1.counts;
+	const vector<double>& y2 = pha_heg_m1.counts;
+	const vector<double>& f_mid = pha_heg_p1.bin_lo;
 
 	// I'm only interested in a specific region of the spectrum
 	// right now, so let's only look at that!
 	double f_min = f_mid_old[0];
 	double f_max = f_mid_old[f_mid_old.size()-1];
 
-	vector<double> y_small, yerr_small, mu_small;
-	for (size_t k=0; k<y.size(); k++)
+        double logl1 = 0.;
+	double logl2 = 0.;
+	    for(size_t i=0; i<y1.size(); i++)
 		{
-			if (f_mid[k] < f_min)
-				continue;
-			if (f_mid[k] > f_max)
-				continue;
+                        if (f_mid[i] < f_min)
+                                continue;
+                        if (f_mid[i] > f_max)
+                                continue;
 			else
 				{
-					y_small.push_back(y[k]);
-					yerr_small.push_back(yerr[k]);
-					mu_small.push_back(mu[k]);
-				} 
-
-		}
-
-        double logl = 0.;
-	    for(size_t i=0; i<y_small.size(); i++)
-		{
-			logl += -mu_small[i] + y_small[i]*log(mu_small[i]) - gsl_sf_lngamma(y_small[i] + 1.);
-
-			//logl += -0.5*log(2.*M_PI) - log(yerr_small[i]) - pow(y_small[i]-mu_small[i], 2)/(2.*pow(yerr_small[i], 2));
+					logl1 += -mu1[i] + y1[i]*log(mu1[i]) - gsl_sf_lngamma(y1[i] + 1.);
+                                        logl2 += -mu2[i] + y2[i]*log(mu2[i]) - gsl_sf_lngamma(y2[i] + 1.);
+				}
  		}
-	return logl;
+	return logl1+logl2;
 }
 
 void MyModel::print(std::ostream& out) const
 {
-        //out<<background<<' '<<noise_L<<' '<<noise_sigma<<' ';
+        out<<background1<<' '<<background2<<' '<<noise_L<<' '<<noise_sigma<<' ';
         dopplershift.print(out);
 
-	for(size_t i=0; i<mu.size(); i++)
-		out<<mu[i]<<' ';
+	for(size_t i=0; i<mu1.size(); i++)
+		out<<mu1[i]<<' '<<mu2[i]<<' ';
 
 }
 

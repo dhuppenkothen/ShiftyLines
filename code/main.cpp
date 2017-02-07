@@ -16,7 +16,8 @@ int main(int argc, char** argv)
 
 	// get the data filename from the command line
 	Data::get_instance().load_data(datadir, options.get_data_file().c_str());
-        cout<<"Loaded FITS file data ..."<<endl;
+
+        cout<<"Loaded FITS files with data ..."<<endl;
 
 	// I need the old text file to set min/max energy boundaries for the spectrum
         char text_file[128];

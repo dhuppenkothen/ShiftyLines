@@ -18,7 +18,8 @@ class MyModel
 		static const Data& data;
 
 		// A flat background level
-		double background;
+		double background1;
+		double background2;
 
 		// The Lorentzians
 		DNest4::RJObject<MyConditionalPrior> dopplershift;
@@ -29,9 +30,12 @@ class MyModel
 		// Poisson mean
 		// these should probably be long doubles
 		// need to fix that some time!
-		std::vector<double> mu;
-                std::vector<double> counts;
-		std::vector<double> mu_small;
+		std::vector<double> mu1;
+                std::vector<double> counts1;
+                std::vector<double> mu2;
+                std::vector<double> counts2;
+
+//		std::vector<double> mu_small;
 
 		// Calculate mu from scratch:
 		void calculate_mu();
