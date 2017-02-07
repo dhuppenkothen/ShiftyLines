@@ -206,9 +206,9 @@ void MyModel::calculate_mu()
 	for(size_t i=0; i<mu1.size(); i++)
 	{
 		if (f_left[i] < f_min)
-			continue;
+			y[i]=1.0;
 		if (f_right[i] > f_max)
-             		continue;
+             		y[i]=1.0;
 
 	        if((f_left[i] < f_min) && (f_right[i] > f_min ))
 	                y[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals[i];
@@ -348,7 +348,8 @@ double MyModel::log_likelihood() const
 
 	const vector<double>& y1 = pha_heg_p1.counts;
 	const vector<double>& y2 = pha_heg_m1.counts;
-	const vector<double>& f_mid = pha_heg_p1.bin_lo;
+	const vector<double>& f_left = pha_heg_p1.bin_lo;
+        const vector<double>& f_right = pha_heg_p1.bin_hi;
 
 	// I'm only interested in a specific region of the spectrum
 	// right now, so let's only look at that!
@@ -359,9 +360,9 @@ double MyModel::log_likelihood() const
 	double logl2 = 0.;
 	    for(size_t i=0; i<y1.size(); i++)
 		{
-                        if (f_mid[i] < f_min)
+                        if (f_left[i] < f_min)
                                 continue;
-                        if (f_mid[i] > f_max)
+                        if (f_right[i] > f_max)
                                 continue;
 			else
 				{
