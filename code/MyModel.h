@@ -30,6 +30,7 @@ class MyModel
 		// Poisson mean
 		// these should probably be long doubles
 		// need to fix that some time!
+		std::vector<double> mu;
 		std::vector<double> mu1;
                 std::vector<double> counts1;
                 std::vector<double> mu2;

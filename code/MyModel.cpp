@@ -129,10 +129,11 @@ void MyModel::calculate_mu()
 	const vector<double>& f_right = pha_heg_p1.bin_hi;
 
 	// assign constant background to model
-	mu1.assign(mu1.size(), background1); //old version
-        mu2.assign(mu2.size(), background2); //old version
+	mu1.assign(mu1.size(), background1);
+        mu2.assign(mu2.size(), background2); 
 
- 
+	mu.assign(mu1.size(), 0.0); // array 
+
 	// get amplitudes and widths from the RJObject 
 	const vector< vector<double> >& dopplershiftcomponents = dopplershift.get_components();
  
@@ -178,21 +179,22 @@ void MyModel::calculate_mu()
 						else 
 							s = 1;
  
-						mu1[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
+						mu[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
 									- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
-						mu2[i] = mu1[i];
+						//mu2[i] = mu1[i];
 						}
                 		}	 
 			}
 	}
 
+   
 
         // fold through the ARF
         // code taken from sherpa
         for (size_t ii = 0; ii < mu1.size(); ii++ )
 		{
-             		mu1[ ii ] *= pha_heg_p1.arf.specresp[ ii ];
-             		mu2[ ii ] *= pha_heg_m1.arf.specresp[ ii ];
+			mu1[ ii ] = (mu1[ ii ] + mu[ ii ]) * pha_heg_p1.arf.specresp[ ii ];
+             		mu2[ ii ] = (mu2[ ii ] + mu[ ii]) * pha_heg_m1.arf.specresp[ ii ];
 		}
 
         // Compute the OU process
