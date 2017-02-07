@@ -233,13 +233,14 @@ def find_weights(p_samples):
 
 def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
 
+    print("filename: " + str(filename))
     #times, counts = burstmodel.read_gbm_lightcurves(filename)
-    data = np.loadtxt(filename)
-    times = data[:,0]
-    y = data[:,1]
-    yerr = data[:,2]
+    #data = np.loadtxt(filename)
+    #times = data[:,0]
+    #y = data[:,1]
+    #yerr = data[:,2]
 
-    dt = times[1] - times[0]
+    #dt = times[1] - times[0]
 
     #dt_wanted = 0.0005
 
@@ -254,8 +255,8 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
     #    filename = "%s_new.dat"%(filename[:-4])
 
     ### first run: set levels to 200
-    print("Rewriting DNest run file")
-    rewrite_main(filename, dnest_dir)
+    #print("Rewriting DNest run file")
+    #rewrite_main(filename, dnest_dir)
     rewrite_options(nlevels=200, dnest_dir=dnest_dir)
     remake_model(dnest_dir)
 
@@ -276,7 +277,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
 
     print("First run of DNest: Find number of levels")
     ## run DNest
-    dnest_process = subprocess.Popen(["./main", "-t", "8"])
+    dnest_process = subprocess.Popen(["./main", "-t", "8", "-d", fname])
 
 
 
