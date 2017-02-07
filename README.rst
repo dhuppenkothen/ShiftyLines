@@ -11,6 +11,8 @@ Uses DNest4 and RJObject for reversible-jump MCMC.
 Prerequisites
 -------------
 * gcc
+* `cfitsio <http://heasarc.gsfc.nasa.gov/docs/software/fitsio/fitsio.html>`_
+* `CCFits <http://heasarc.gsfc.nasa.gov/docs/software/fitsio/ccfits/index.html>`_
 * python3
 * numpy
 * `DNest4 <https://github.com/eggplantbren/DNest4>`_
