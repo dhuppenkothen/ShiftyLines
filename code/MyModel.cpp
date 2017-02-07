@@ -376,8 +376,12 @@ void MyModel::print(std::ostream& out) const
         dopplershift.print(out);
 
 	for(size_t i=0; i<mu1.size(); i++)
-		out<<mu1[i]<<' '<<mu2[i]<<' ';
+		out<<mu1[i]<<' ';
 
+        for(size_t i=0; i<mu2.size(); i++)
+                out<<mu2[i]<<' ';
+
+  
 }
 
 string MyModel::description() const
