@@ -174,14 +174,22 @@ def postprocess_new(temperature=1., numResampleLogX=1, plot=False, save_posterio
                     right = logx_samples_thisLevel[j-1]
                 else:
                     right = levels[i][0]
+                try:
+                    logp_samples[logl_samples_thisLevel[j][2]][z] = np.log(0.5) + dnest4.classic.logdiffexp(right, left)
+                except AttributeError:
+                    logp_samples[logl_samples_thisLevel[j][2]][z] = np.log(0.5) + dnest4.logdiffexp(right, left)
 
-                logp_samples[logl_samples_thisLevel[j][2]][z] = np.log(0.5) + dnest4.classic.logdiffexp(right, left)
 
         logl = sample_info[:,1]/temperature
+        try:
+             logp_samples[:,z] = logp_samples[:,z] - dnest4.classic.logsumexp(logp_samples[:,z])
+             logP_samples[:,z] = logp_samples[:,z] + logl
+             logz_estimates[z] = dnest4.classic.logsumexp(logP_samples[:,z])
+        except AttributeError:
+             logp_samples[:,z] = logp_samples[:,z] - dnest4.logsumexp(logp_samples[:,z])
+             logP_samples[:,z] = logp_samples[:,z] + logl
+             logz_estimates[z] = dnest4.logsumexp(logP_samples[:,z])
 
-        logp_samples[:,z] = logp_samples[:,z] - dnest4.classic.logsumexp(logp_samples[:,z])
-        logP_samples[:,z] = logp_samples[:,z] + logl
-        logz_estimates[z] = dnest4.classic.logsumexp(logP_samples[:,z])
         logP_samples[:,z] -= logz_estimates[z]
         P_samples[:,z] = np.exp(logP_samples[:,z])
         H_estimates[z] = -logz_estimates[z] + np.sum(P_samples[:,z]*logl)
@@ -312,7 +320,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
     rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
     remake_model(dnest_dir)
 
-    dnest_process = subprocess.Popen(["./main", "-t", "8"])
+    dnest_process = subprocess.Popen(["./main", "-t", "8", "-d", fname])
 
     endflag = False
     while endflag is False:
