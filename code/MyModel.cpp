@@ -368,7 +368,7 @@ double MyModel::log_likelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
-        //out<<background<<' '<<noise_L<<' '<<noise_sigma<<' ';
+        out<<background<<' '<<noise_L<<' '<<noise_sigma<<' ';
         dopplershift.print(out);
 
 	for(size_t i=0; i<mu.size(); i++)
