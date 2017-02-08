@@ -108,7 +108,8 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   for(size_t i=0; i<pha.bin_lo.size(); i++){
      bin_mid[i] = pha.arf.energ_lo[i] + (pha.arf.energ_hi[i] - pha.arf.energ_lo[i])/2.0;
   }
-
+  pha.bin_lo = pha.arf.energ_lo;
+  pha.bin_hi = pha.arf.energ_hi;
   pha.bin_mid = bin_mid;
 
 

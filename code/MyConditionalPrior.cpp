@@ -9,7 +9,7 @@ using namespace DNest4;
 // These are the lower and upper bounds on the uniform 
 // prior on the Doppler shift. Change them here if you'd 
 // like the prior to change!
-const double MyConditionalPrior::dmin = -0.1;
+const double MyConditionalPrior::dmin = 0.0;
 const double MyConditionalPrior::dmax = 0.1;
 
  
