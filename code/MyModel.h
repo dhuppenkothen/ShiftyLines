@@ -19,7 +19,6 @@ class MyModel
 
 		// A flat background level
 		double background;
-		double inst_fac;
 
 		// The Lorentzians
 		DNest4::RJObject<MyConditionalPrior> dopplershift;
@@ -31,10 +30,7 @@ class MyModel
 		// these should probably be long doubles
 		// need to fix that some time!
 		std::vector<double> mu;
-		std::vector<double> mu1;
-                std::vector<double> counts1;
-                std::vector<double> mu2;
-                std::vector<double> counts2;
+                std::vector<double> counts;
 
 //		std::vector<double> mu_small;
 

@@ -24,11 +24,7 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  pha_heg_p1 = load_fits(datadir, "heg_p1.pha");
-//  pha_meg_p1 = load_fits(datadir, "meg_p1.pha");
-  pha_heg_m1 = load_fits(datadir, "heg_m1.pha");
-
-//  pha_meg_m1 = load_fits(datadir, "meg_m1.pha");
+  pha = load_fits(datadir, filename);
 
 }
 
@@ -38,8 +34,6 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   strcpy(whole_file, datadir);
   strcat(whole_file, filename);
   strcpy(pha.filename, whole_file);
-
-
 
   CCfits::FITS::setVerboseMode(true);
 
@@ -56,34 +50,34 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   CCfits::Column& column2 = spectrum.column("COUNTS");
   column2.read(pha.counts, 1, column2.rows());
 
-  CCfits::Column& column3 = spectrum.column("BIN_LO");
-  column3.read(pha.bin_lo, 1, column3.rows());
+  //CCfits::Column& column3 = spectrum.column("BIN_LO");
+  //column3.read(pha.bin_lo, 1, column3.rows());
  
-  CCfits::Column& column4 = spectrum.column("BIN_HI");
-  column4.read(pha.bin_hi, 1, column4.rows());
+  //CCfits::Column& column4 = spectrum.column("BIN_HI");
+  //column4.read(pha.bin_hi, 1, column4.rows());
 
-  vector<double> bin_mid(pha.bin_lo.size(), 0.0);
+  //vector<double> bin_mid(pha.bin_lo.size(), 0.0);
 
   // compute the middle of the energy bins
-  for(size_t i=0; i<pha.bin_lo.size(); i++){
-     bin_mid[i] = pha.bin_lo[i] + (pha.bin_hi[i] - pha.bin_lo[i])/2.0;
-  }
+  //for(size_t i=0; i<pha.bin_lo.size(); i++){
+  //   bin_mid[i] = pha.bin_lo[i] + (pha.bin_hi[i] - pha.bin_lo[i])/2.0;
+  //}
 
-  pha.bin_mid = bin_mid;
+  //pha.bin_mid = bin_mid;
 
   string respfile, ancrfile;
   // need to read some keys, too!
   spectrum.readKey("RESPFILE", respfile);
   spectrum.readKey("ANCRFILE", ancrfile);
 
-  string eunit_lo, eunit_hi;
-  spectrum.readKey("TUNIT2", eunit_lo);
-  spectrum.readKey("TUNIT3", eunit_hi);
+  //string eunit_lo, eunit_hi;
+  //spectrum.readKey("TUNIT2", eunit_lo);
+  //spectrum.readKey("TUNIT3", eunit_hi);
 
-  cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
+  //cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
 
-  pha.bin_lo_unit = eunit_lo;
-  pha.bin_hi_unit = eunit_hi;
+  //pha.bin_lo_unit = eunit_lo;
+  //pha.bin_hi_unit = eunit_hi;
 
   pha.respfile = respfile;
   pha.ancrfile = ancrfile;
@@ -108,6 +102,16 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
 
   pha.arf = load_arf(datadir, ancrfilechars);
 
+  vector<double> bin_mid(pha.arf.energ_lo.size(), 0.0);
+
+  // compute the middle of the energy bins
+  for(size_t i=0; i<pha.bin_lo.size(); i++){
+     bin_mid[i] = pha.arf.energ_lo[i] + (pha.arf.energ_hi[i] - pha.arf.energ_lo[i])/2.0;
+  }
+
+  pha.bin_mid = bin_mid;
+
+
   return pha;
 
 }
@@ -129,7 +133,7 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
   std::unique_ptr<CCfits::FITS> input_file(new CCfits::FITS(rmf.filename,CCfits::Read));
 
   // instantiate objects for temporary variables
-  std::vector<std::valarray<int>> f_chan, n_chan;
+  std::valarray<int> f_chan, n_chan;
   std::vector<std::valarray<double>>  mtx; 
 
   // point to correct HDU extension
@@ -146,10 +150,10 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
   column3.read(rmf.n_grp, 1, column3.rows());
 
   CCfits::Column& column4 = matrix.column("F_CHAN");
-  column4.readArrays(f_chan, 1, column4.rows());
+  column4.read(f_chan, 1, column4.rows());
  
   CCfits::Column& column5 = matrix.column("N_CHAN");
-  column5.readArrays(n_chan, 1, column5.rows());
+  column5.read(n_chan, 1, column5.rows());
 
   // NOTE: Alternative names could be "SPECRESP MATRIX", 
   // "AXAF_RMF" and it could also be "HDUCLAS1" or "HDUCLAS2" 
@@ -186,34 +190,48 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
   CCfits::Column& column7 = ebounds.column("E_MAX");
   column7.read(rmf.e_max, 1, column7.rows());
 
-
   // do some magic on the arrays
-  for(size_t i=0;i<rmf.n_grp.size();i++) 
+  for(size_t i=0;i<rmf.n_grp.size();i++)
     {
     if(rmf.n_grp[i]>0)
          {
-         if (f_chan[i].size() > 1)
-           {
-           for(size_t j=0;j< f_chan[i].size(); j++)
-              rmf.f_chan.push_back(f_chan[i][j]);
-           
-           }
-        else
-             rmf.f_chan.push_back(f_chan[i][0]);
-       
-        if (n_chan[i].size() > 1)
-           {
-           for(size_t j=0;j< n_chan[i].size(); j++)
-              rmf.n_chan.push_back(n_chan[i][j]);
-           }
-        else
-            rmf.n_chan.push_back(n_chan[i][0]);
-       
+             rmf.f_chan.push_back(f_chan[i]);
+             rmf.n_chan.push_back(n_chan[i]);
+
         for(size_t j=0; j<mtx[i].size(); j++)
            rmf.matrix.push_back(mtx[i][j]);
   }
   }
 
+
+
+//  // do some magic on the arrays
+//  for(size_t i=0;i<rmf.n_grp.size();i++) 
+//    {
+//    if(rmf.n_grp[i]>0)
+//         {
+//         if (f_chan[i].size() > 1)
+//           {
+//           for(size_t j=0;j< f_chan[i].size(); j++)
+//              rmf.f_chan.push_back(f_chan[i][j]);
+//           
+//           }
+//        else
+//             rmf.f_chan.push_back(f_chan[i][0]);
+//       
+//        if (n_chan[i].size() > 1)
+//           {
+//           for(size_t j=0;j< n_chan[i].size(); j++)
+//              rmf.n_chan.push_back(n_chan[i][j]);
+//           }
+//        else
+//            rmf.n_chan.push_back(n_chan[i][0]);
+//       
+//        for(size_t j=0; j<mtx[i].size(); j++)
+//           rmf.matrix.push_back(mtx[i][j]);
+//  }
+//  }
+//
   cout<<"There are "<<rmf.matrix.size()<<" elements in the response matrix."<<endl;
 
  
@@ -255,7 +273,7 @@ ARFData Data::load_arf(const char* datadir, const char* filename)
     CCfits::Column& column5 = specresp.column("BIN_HI");
     column5.read(arf.bin_hi, 1, column5.rows());
     }
-  catch(CCfits::HDU::NoSuchKeyword)
+  catch(CCfits::Table::NoSuchColumn)
     { 
     cout<<"No keywords BIN_LO and BIN_HI"<<endl;
     }
