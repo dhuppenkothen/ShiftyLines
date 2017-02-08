@@ -11,11 +11,12 @@ int main(int argc, char** argv)
 	// parse command line options
 	CommandLineOptions options(argc, argv);
  
-        char datadir[50];
-        strcpy(datadir, "../data/cyg_daniela/");
+        //char datadir[50];
+        //strcpy(datadir, "../data/cyg_daniela/");
+	std::string datadir = "../data/cyg_daniela/";
 
 	// get the data filename from the command line
-	Data::get_instance().load_data(datadir, options.get_data_file().c_str());
+	Data::get_instance().load_data(datadir.c_str(), options.get_data_file().c_str());
 
         cout<<"Loaded FITS files with data ..."<<endl;
 

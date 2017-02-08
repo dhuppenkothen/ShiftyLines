@@ -20,7 +20,7 @@ const PHAData& pha_heg_m1 = Data::get_instance().get_pha_heg_m1();
 
 MyModel::MyModel()
 //:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
-:dopplershift(3*nlines+4, 4, false, MyConditionalPrior())
+:dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
 ,noise_normals(pha_heg_p1.bin_lo.size())
 //,mu(data.get_pha().arf.specresp.size())
 ,mu1(pha_heg_p1.counts.size())
@@ -129,8 +129,8 @@ void MyModel::calculate_mu()
 	const vector<double>& f_right = pha_heg_p1.bin_hi;
 
 	// assign constant background to model
-	mu1.assign(mu1.size(), background1);
-        mu2.assign(mu2.size(), background2); 
+	mu1.assign(mu1.size(), background);
+        mu2.assign(mu2.size(), background); 
 
 	mu.assign(mu1.size(), 0.0); // array 
 
@@ -144,7 +144,6 @@ void MyModel::calculate_mu()
 //        // right now, so let's only look at that!
 	const double& f_min = data.get_f_min();
         const double& f_max = data.get_f_max();
-
 
         for(size_t j=0; j<dopplershiftcomponents.size(); j++)
         {
@@ -178,23 +177,22 @@ void MyModel::calculate_mu()
 							s = -1;
 						else 
 							s = 1;
- 
-						mu[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
-									- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
-						//mu2[i] = mu1[i];
+						if ((std::abs(f_right[i] - line_pos_shifted[k]) < 5.*width[k]) && 
+						   (std::abs(f_left[i] - line_pos_shifted[k]) < 5.*width[k])) 
+							mu[i] += s*amplitude[k]*(gaussian_cdf(f_right[i], line_pos_shifted[k], width[k])
+										- gaussian_cdf(f_left[i], line_pos_shifted[k], width[k]));
 						}
                 		}	 
 			}
 	}
 
    
-
         // fold through the ARF
         // code taken from sherpa
         for (size_t ii = 0; ii < mu1.size(); ii++ )
 		{
 			mu1[ ii ] = (mu1[ ii ] + mu[ ii ]) * pha_heg_p1.arf.specresp[ ii ];
-             		mu2[ ii ] = (mu2[ ii ] + mu[ ii]) * pha_heg_m1.arf.specresp[ ii ];
+             		mu2[ ii ] = inst_fac * (mu2[ ii ] + mu[ ii]) * pha_heg_m1.arf.specresp[ ii ];
 		}
 
         // Compute the OU process
@@ -247,10 +245,10 @@ void MyModel::calculate_mu()
 
 void MyModel::from_prior(RNG& rng)
 {
-	background1 = tan(M_PI*(0.97*rng.rand() - 0.485));
-	background1 = exp(background1);
-        background2 = tan(M_PI*(0.97*rng.rand() - 0.485));
-        background2 = exp(background2);
+	background = tan(M_PI*(0.97*rng.rand() - 0.485));
+	background = exp(background);
+        inst_fac = tan(M_PI*(0.97*rng.rand() - 0.485));
+        inst_fac = exp(inst_fac);
 
 	dopplershift.from_prior(rng);
 
@@ -300,21 +298,21 @@ double MyModel::perturb(RNG& rng)
 		which = rng.rand_int(4);
 		if(which == 0)
 		{
-			background1 = log(background1);
-			background1 = (atan(background1)/M_PI + 0.485)/0.97;
-			background1 += rng.randh();
-			background1 = mod(background1, 1.);
-			background1 = tan(M_PI*(0.97*background1 - 0.485));
-			background1 = exp(background1);
+			background = log(background);
+			background = (atan(background)/M_PI + 0.485)/0.97;
+			background += rng.randh();
+			background = mod(background, 1.);
+			background = tan(M_PI*(0.97*background - 0.485));
+			background = exp(background);
 		}
                 if(which == 1)
                 {
-                        background2 = log(background2);
-                        background2 = (atan(background2)/M_PI + 0.485)/0.97;
-                        background2 += rng.randh();
-                        background2 = mod(background2, 1.);
-                        background2 = tan(M_PI*(0.97*background2 - 0.485));
-                        background2 = exp(background2);
+                        inst_fac = log(inst_fac);
+                        inst_fac = (atan(inst_fac)/M_PI + 0.485)/0.97;
+                        inst_fac += rng.randh();
+                        inst_fac = mod(inst_fac, 1.);
+                        inst_fac = tan(M_PI*(0.97*inst_fac - 0.485));
+                        inst_fac = exp(inst_fac);
                 }
 
 		if(which == 2)
@@ -353,8 +351,9 @@ double MyModel::log_likelihood() const
 
 	// I'm only interested in a specific region of the spectrum
 	// right now, so let's only look at that!
-	double f_min = f_mid_old[0];
-	double f_max = f_mid_old[f_mid_old.size()-1];
+
+        const double& f_min = data.get_f_min();
+        const double& f_max = data.get_f_max();
 
         double logl1 = 0.;
 	double logl2 = 0.;
@@ -375,7 +374,7 @@ double MyModel::log_likelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
-        out<<background1<<' '<<background2<<' '<<noise_L<<' '<<noise_sigma<<' ';
+        out<<background<<' '<<inst_fac<<' '<<noise_L<<' '<<noise_sigma<<' ';
         dopplershift.print(out);
 
 	for(size_t i=0; i<mu1.size(); i++)

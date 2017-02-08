@@ -18,8 +18,8 @@ class MyModel
 		static const Data& data;
 
 		// A flat background level
-		double background1;
-		double background2;
+		double background;
+		double inst_fac;
 
 		// The Lorentzians
 		DNest4::RJObject<MyConditionalPrior> dopplershift;
