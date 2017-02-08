@@ -19,10 +19,8 @@ const PHAData& pha_heg_m1 = Data::get_instance().get_pha_heg_m1();
 
 
 MyModel::MyModel()
-//:dopplershift(3*nlines+1, 5, false, MyConditionalPrior())
 :dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
 ,noise_normals(pha_heg_p1.bin_lo.size())
-//,mu(data.get_pha().arf.specresp.size())
 ,mu1(pha_heg_p1.counts.size())
 ,mu2(pha_heg_m1.counts.size())
 {
@@ -115,10 +113,6 @@ void MyModel::calculate_mu()
 	// declare shifted line positions
 	vector<double> line_pos_shifted(line_pos.size());
 
-	// get left and right boundaries of the wavelength bins
-        //const vector<double>& f_left = data.get_f_left();
-        //const vector<double>& f_right = data.get_f_right();
-
         // NEW VERSION: get PHA data from FITS file:
         // doesn't do anything yet, just testing whether I can load the data!
 	// NOTE: Just having this line in the code (uncommented, of course), makes
@@ -143,7 +137,8 @@ void MyModel::calculate_mu()
 //        // I'm only interested in a specific region of the spectrum
 //        // right now, so let's only look at that!
 	const double& f_min = data.get_f_min();
-        const double& f_max = data.get_f_max();
+//        const double& f_max = data.get_f_max();
+	const double f_max = 7.0;
 
         for(size_t j=0; j<dopplershiftcomponents.size(); j++)
         {
@@ -192,7 +187,8 @@ void MyModel::calculate_mu()
         for (size_t ii = 0; ii < mu1.size(); ii++ )
 		{
 			mu1[ ii ] = (mu1[ ii ] + mu[ ii ]) * pha_heg_p1.arf.specresp[ ii ];
-             		mu2[ ii ] = inst_fac * (mu2[ ii ] + mu[ ii]) * pha_heg_m1.arf.specresp[ ii ];
+            		mu2[ ii ] = inst_fac * (mu2[ ii ] + mu[ ii]) * pha_heg_m1.arf.specresp[ ii ];
+
 		}
 
         // Compute the OU process
@@ -205,15 +201,15 @@ void MyModel::calculate_mu()
 	{
 		if (f_left[i] < f_min)
 			y[i]=1.0;
-		if (f_right[i] > f_max)
+		else if (f_right[i] > f_max)
              		y[i]=1.0;
 
-	        if((f_left[i] < f_min) && (f_right[i] > f_min ))
+	        else if((f_left[i] < f_min) && (f_right[i] > f_min ))
 	                y[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals[i];
 	        else
 	                y[i] = alpha*y[i-1] + noise_sigma*noise_normals[i];
 	        mu1[i] *= exp(y[i]);
-                mu2[i] *= exp(y[i]);
+		mu2[i] *= exp(y[i]);
 
 	}
 
