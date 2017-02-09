@@ -319,11 +319,11 @@ void MyModel::calculate_mu()
           counts_mm.size(), &counts_mm[0],
           pha_meg_m.rmf.offset);
 
-        mu_hp.resize(data.get_pha_heg_p().bin_lo.size());
-        mu_hm.resize(data.get_pha_heg_m().bin_lo.size());
+        counts_hp.resize(data.get_pha_heg_p().bin_lo.size());
+        counts_hm.resize(data.get_pha_heg_m().bin_lo.size());
 
-	mu_mp.resize(data.get_pha_meg_p().bin_lo.size());
-        mu_mm.resize(data.get_pha_meg_m().bin_lo.size());
+	counts_mp.resize(data.get_pha_meg_p().bin_lo.size());
+        counts_mm.resize(data.get_pha_meg_m().bin_lo.size());
 
 }
 
@@ -480,8 +480,6 @@ double MyModel::log_likelihood() const
         const vector<double>& y_mm = pha_meg_m.counts;
         const vector<double>& f_left_m = pha_meg_p.bin_lo;
         const vector<double>& f_right_m = pha_meg_p.bin_hi;
-
-
 
 	// I'm only interested in a specific region of the spectrum
 	// right now, so let's only look at that!
