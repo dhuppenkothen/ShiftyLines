@@ -349,7 +349,8 @@ double MyModel::log_likelihood() const
 	// right now, so let's only look at that!
 
         const double& f_min = data.get_f_min();
-        const double& f_max = data.get_f_max();
+        //const double& f_max = data.get_f_max();
+	const double& f_max = 7.0;
 
         double logl1 = 0.;
 	double logl2 = 0.;
