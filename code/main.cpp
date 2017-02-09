@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 	Data::get_instance().load(options.get_data_file().c_str());
 
 	// file with line positions in same units as data; CURRENTLY HARDCODED!
-	Data::get_instance().load_lines("../data/si_lines.txt");
+	Data::get_instance().load_lines("../data/lines_extended.txt");
  
 	// sample!
 	Sampler<MyModel> sampler = setup<MyModel>(options);
