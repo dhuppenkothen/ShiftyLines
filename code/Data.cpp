@@ -24,11 +24,10 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  pha_heg_p1 = load_fits(datadir, "heg_p1.pha");
-//  pha_meg_p1 = load_fits(datadir, "meg_p1.pha");
-  pha_heg_m1 = load_fits(datadir, "heg_m1.pha");
-
-//  pha_meg_m1 = load_fits(datadir, "meg_m1.pha");
+  pha_heg_p = load_fits(datadir, "heg_p1.pha");
+  pha_meg_p = load_fits(datadir, "meg_p1.pha");
+  pha_heg_m = load_fits(datadir, "heg_m1.pha");
+  pha_meg_m = load_fits(datadir, "meg_m1.pha");
 
 }
 

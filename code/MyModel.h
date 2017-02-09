@@ -19,22 +19,31 @@ class MyModel
 
 		// A flat background level
 		double background;
-		double inst_fac;
+		double inst_fac_hm;
+                double inst_fac_mp;
+                double inst_fac_mm;
 
 		// The Lorentzians
 		DNest4::RJObject<MyConditionalPrior> dopplershift;
 		// Extra white noise on the flux
-		std::vector<double> noise_normals;
+		std::vector<double> noise_normals_h;
+                std::vector<double> noise_normals_m;
+
 		double noise_sigma, noise_L;
 
 		// Poisson mean
 		// these should probably be long doubles
 		// need to fix that some time!
-		std::vector<double> mu;
-		std::vector<double> mu1;
-                std::vector<double> counts1;
-                std::vector<double> mu2;
-                std::vector<double> counts2;
+		std::vector<double> mu_h;
+ 		std::vector<double> mu_m;
+		std::vector<double> mu_hp;
+		std::vector<double> mu_hm;
+                std::vector<double> counts_hp;
+                std::vector<double> counts_hm;
+                std::vector<double> mu_mp;
+                std::vector<double> mu_mm;
+                std::vector<double> counts_mp;
+                std::vector<double> counts_mm;
 
 //		std::vector<double> mu_small;
 

@@ -72,10 +72,10 @@ class Data
 
 		//std::vector<double> channel, counts, bin_lo, bin_hi;
 	
-		PHAData pha_heg_p1;
-//                PHAData pha_meg_p1;
-                PHAData pha_heg_m1;
-//                PHAData pha_meg_m1;
+		PHAData pha_heg_p;
+                PHAData pha_meg_p;
+                PHAData pha_heg_m;
+                PHAData pha_meg_m;
 		PHAData pha;
    		RMFData rmf;
 		ARFData arf;	
@@ -105,10 +105,10 @@ class Data
 		const std::vector<double>& get_y() const { return y; }
 		const std::vector<double>& get_yerr() const { return yerr; }
 		const std::vector<double>& get_line_pos() const { return lines; }
-                const PHAData& get_pha_heg_p1() const { return pha_heg_p1; }
-                const PHAData& get_pha_heg_m1() const { return pha_heg_m1; }
-//                const PHAData& get_pha_meg_p1() const { return pha_meg_p1; }
-//                const PHAData& get_pha_meg_m1() const { return pha_meg_m1; }
+                const PHAData& get_pha_heg_p() const { return pha_heg_p; }
+                const PHAData& get_pha_heg_m() const { return pha_heg_m; }
+                const PHAData& get_pha_meg_p() const { return pha_meg_p; }
+                const PHAData& get_pha_meg_m() const { return pha_meg_m; }
 
 		double get_f_min() const { return f_min; }
 		double get_f_max() const { return f_max; }
