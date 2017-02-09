@@ -291,12 +291,22 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
 
     endflag = False
     while endflag is False:
+        #logz_all = []
         try:
             tsys.sleep(60)
             logx_samples, p_samples = postprocess_new(save_posterior=False)
+            #logz_all.append(logz_estimate)
             if p_samples is None:
                 endflag = False
             else:
+#                if len(logz_all) > 1:
+#                    diff_logz = logz_estimate - logz_all[-2]
+#                    if diff_logz < 1.0:
+#                         endflag = True
+#                    else:
+#                         endflag = False
+#                else:
+#                    endflag = False
                 endflag = find_weights(p_samples)
                 print("Endflag: " + str(endflag))
 
@@ -317,7 +327,9 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
         levelfile.write("%s \t %i \n" %(filename, nlevels))
         levelfile.close()
 
-    rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
+    ### BEWARE: I'VE JUST ARTIFICIALLY FIXED THE NUMBER OF LEVELS!!
+    rewrite_options(nlevels=80, dnest_dir=dnest_dir)
+#    rewrite_options(nlevels=nlevels, dnest_dir=dnest_dir)
     remake_model(dnest_dir)
 
     dnest_process = subprocess.Popen(["./main", "-t", "8", "-d", fname])
