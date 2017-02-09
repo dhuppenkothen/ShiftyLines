@@ -273,9 +273,8 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
     fdir = filename[:-len(fname)]
     print("directory: %s" %fdir)
     print("filename: %s" %fname)
-
-    fsplit = fname.split("_")
-    froot = "%s/%s_%s" %(fdir, fsplit[0], fsplit[1])
+    
+    froot = "%s/%s" %(fdir, fname)
     print("froot: " + str(froot))
 
 
@@ -346,7 +345,7 @@ def run_burst(filename, dnest_dir = "./", levelfilename=None, nsims=100):
      
     logx_samples, p_samples = postprocess_new(save_posterior=True)    
 
-    fsplit = filename.split("_")
+    #fsplit = filename.split("_")
     #froot = "%s_%s" %(fsplit[0], fsplit[1])
     print("froot: " + str(froot))
 
