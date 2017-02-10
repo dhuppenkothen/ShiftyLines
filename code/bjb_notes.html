@@ -6,21 +6,35 @@
 
     <!-- CSS classes go here -->
     <style type="text/css">
+        /* Keep the page narrowish */
+        div.content { width: 600px }
+        .fix { color: #009900 }
     </style>
 
 </head>
 
 
 <body>
+    <!-- Wrap entire page in a div -->
+    <div class="content">
 
     <h1>Prior sampling test</h1>
     <hr>
     <p>
-        Using commit 5e9e174f14698913248ef1ef13177f14e245b491,
+        Starting with commit 5e9e174f14698913248ef1ef13177f14e245b491,
         I did some prior sampling, saving every 100th iteration,
-        with a seed of 0.
+        with a seed of 1.
     </p>
 
+    <h4>background</h4>
+    <p>
+        The background parameter should have a 50% prior probability of being
+        less than 1. However, the proportion of prior samples below 1 was
+        actually 42%. Oops!
+<!--        <span class="fix">Fixed on commit ...</span>-->
+    </p>
+
+    </div> <!-- Terminate the div that is around everything -->
 </body>
 
 </html>
