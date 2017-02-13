@@ -388,17 +388,21 @@ double MyModel::perturb(RNG& rng)
 
 
 			}
-			else					// AR(1) proposal
+			else					// Regenerate many
 			{
-				double theta = 2.*M_PI*pow(10., -6.*rng.rand());
-				double cos_theta = cos(theta);
-				double sin_theta = sin(theta);
-				for(double& n: noise_normals_h)
-					n = cos_theta*n + sin_theta*rng.randn();
+                int reps = (int)pow(noise_normals_h.size(), rng.rand());
+                for(int i=0; i<reps; ++i)
+                {
+                    int k = rng.rand_int(noise_normals_h.size());
+                    noise_normals_h[k] = rng.randn();
+                }
 
-                                for(double& n: noise_normals_m)
-                                        n = cos_theta*n + sin_theta*rng.randn();
-
+                reps = (int)pow(noise_normals_m.size(), rng.rand());
+                for(int i=0; i<reps; ++i)
+                {
+                    int k = rng.rand_int(noise_normals_m.size());
+                    noise_normals_m[k] = rng.randn();
+                }
 			}
 		}
 	}
