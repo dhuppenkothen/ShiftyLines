@@ -345,8 +345,8 @@ void MyModel::from_prior(RNG& rng)
 
 	// this, too belongs to the noise process we're not using 
         noise_sigma = exp(log(1E-3) + log(1E3)*rng.rand());
-        noise_L = exp(log(0.001*Data::get_instance().get_f_range())
-                        + log(10)*rng.rand());
+        noise_L = exp(log(0.01*Data::get_instance().get_f_range())
+                        + log(1000)*rng.rand());
 
         calculate_mu();
 
@@ -449,8 +449,8 @@ double MyModel::perturb(RNG& rng)
 		else
 		{
 			noise_L = log(noise_L);
-			noise_L += log(1E4)*rng.randh();
-			wrap(noise_L, log(0.001*Data::get_instance().get_f_range()), log(10.*Data::get_instance().get_f_range()));
+			noise_L += log(1E5)*rng.randh();
+			wrap(noise_L, log(0.01*Data::get_instance().get_f_range()), log(1000.*Data::get_instance().get_f_range()));
 			noise_L = exp(noise_L);
 		}
 	}
