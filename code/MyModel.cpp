@@ -17,6 +17,8 @@ const PHAData& pha_heg_m = Data::get_instance().get_pha_heg_m();
 const PHAData& pha_meg_p = Data::get_instance().get_pha_meg_p();
 const PHAData& pha_meg_m = Data::get_instance().get_pha_meg_m();
 
+// Initialise the static distribution
+const DNest4::Cauchy MyModel::cauchy(0.0, 1.0);
 
 MyModel::MyModel()
 :dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
@@ -329,8 +331,12 @@ void MyModel::calculate_mu()
 
 void MyModel::from_prior(RNG& rng)
 {
-	background = tan(M_PI*(0.97*rng.rand() - 0.485));
-	background = exp(background);
+    do
+    {
+    	background = cauchy.generate(rng);
+    }while(std::abs(background) > 25.0);
+    background = exp(background);
+
         inst_fac_hm = tan(M_PI*(0.97*rng.rand() - 0.485));
         inst_fac_hm = exp(inst_fac_hm);
 
@@ -369,15 +375,15 @@ double MyModel::perturb(RNG& rng)
 		{
 			if(rng.rand() <= 0.5)	// Propose to move only one
 			{
-				which = rng.rand_int(noise_normals_h.size());
-				logH -= -0.5*pow(noise_normals_h[which], 2);
-				noise_normals_h[which] += rng.randh();
-				logH += -0.5*pow(noise_normals_h[which], 2);
+				int i = rng.rand_int(noise_normals_h.size());
+				logH -= -0.5*pow(noise_normals_h[i], 2);
+				noise_normals_h[i] += rng.randh();
+				logH += -0.5*pow(noise_normals_h[i], 2);
 
-                                which = rng.rand_int(noise_normals_m.size());
-                                logH -= -0.5*pow(noise_normals_m[which], 2);
-                                noise_normals_m[which] += rng.randh();
-                                logH += -0.5*pow(noise_normals_m[which], 2);
+                                i = rng.rand_int(noise_normals_m.size());
+                                logH -= -0.5*pow(noise_normals_m[i], 2);
+                                noise_normals_m[i] += rng.randh();
+                                logH += -0.5*pow(noise_normals_m[i], 2);
 
 
 
@@ -401,14 +407,13 @@ double MyModel::perturb(RNG& rng)
 		which = rng.rand_int(6);
 		if(which == 0)
 		{
-			background = log(background);
-			background = (atan(background)/M_PI + 0.485)/0.97;
-			background += rng.randh();
-			background = mod(background, 1.);
-			background = tan(M_PI*(0.97*background - 0.485));
-			background = exp(background);
+            background = log(background);
+            logH += cauchy.perturb(background, rng);
+            if(std::abs(background) > 25.0)
+                logH = -1E300;
+            background = exp(background);
 		}
-                if(which == 1)
+                else if(which == 1)
                 {
                         inst_fac_hm = log(inst_fac_hm);
                         inst_fac_hm = (atan(inst_fac_hm)/M_PI + 0.485)/0.97;
@@ -418,7 +423,7 @@ double MyModel::perturb(RNG& rng)
                         inst_fac_hm = exp(inst_fac_hm);
                 }
 
-                if(which == 2)
+                else if(which == 2)
                 {
                         inst_fac_mp = log(inst_fac_mp);
                         inst_fac_mp = (atan(inst_fac_mp)/M_PI + 0.485)/0.97;
@@ -428,7 +433,7 @@ double MyModel::perturb(RNG& rng)
                         inst_fac_mp = exp(inst_fac_mp);
                 }
 
-                if(which == 3)
+                else if(which == 3)
                 {
                         inst_fac_mm = log(inst_fac_mm);
                         inst_fac_mm = (atan(inst_fac_mm)/M_PI + 0.485)/0.97;
@@ -439,7 +444,7 @@ double MyModel::perturb(RNG& rng)
                 }
 
 
-		if(which == 4)
+		else if(which == 4)
 		{
 			noise_sigma = log(noise_sigma);
 			noise_sigma += log(1E3)*rng.randh();
