@@ -529,18 +529,54 @@ void MyModel::print(std::ostream& out) const
         out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
         dopplershift.print(out);
 
+        const double& f_min = data.get_f_min();
+        const double& f_max = data.get_f_max();
+        const vector<double>& f_left_h = pha_heg_p.bin_lo;
+        const vector<double>& f_right_h = pha_heg_p.bin_hi;
+
+        const vector<double>& f_left_m = pha_meg_p.bin_lo;
+        const vector<double>& f_right_m = pha_meg_p.bin_hi;
+
+
 	for(size_t i=0; i<counts_hp.size(); i++)
-		out<<counts_hp[i]<<' ';
+        	{
+	                if (f_left_h[i] < f_min)
+                                continue;
+                        if (f_right_h[i] > f_max)
+                                continue;
+			else
+				out<<counts_hp[i]<<' ';
+		}
 
         for(size_t i=0; i<counts_hm.size(); i++)
-                out<<counts_hm[i]<<' ';
+		{
+                        if (f_left_h[i] < f_min)
+                                continue;
+                        if (f_right_h[i] > f_max)
+                                continue;
+			else
+		                out<<counts_hm[i]<<' ';
+		}
 
         for(size_t i=0; i<counts_mp.size(); i++)
-                out<<counts_mp[i]<<' ';
+		{
+                        if (f_left_m[i] < f_min)
+                                continue;
+                        if (f_right_m[i] > f_max)
+                                continue;
+                        else
+		                out<<counts_mp[i]<<' ';
+ 		}
 
         for(size_t i=0; i<counts_mm.size(); i++)
-                out<<counts_mm[i]<<' ';
-  
+		{
+                        if (f_left_m[i] < f_min)
+                                continue;
+                        if (f_right_m[i] > f_max)
+                                continue;
+                        else
+		                out<<counts_mm[i]<<' ';  
+		}
 }
 
 string MyModel::description() const
