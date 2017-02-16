@@ -14,8 +14,8 @@ const int& nlines = Data::get_instance().get_nlines();
 //const std::vector<double> line_pos = Data::get_instance().get_line_pos();
 const PHAData& pha_heg_p = Data::get_instance().get_pha_heg_p();
 const PHAData& pha_heg_m = Data::get_instance().get_pha_heg_m();
-const PHAData& pha_meg_p = Data::get_instance().get_pha_meg_p();
-const PHAData& pha_meg_m = Data::get_instance().get_pha_meg_m();
+//const PHAData& pha_meg_p = Data::get_instance().get_pha_meg_p();
+//const PHAData& pha_meg_m = Data::get_instance().get_pha_meg_m();
 
 // Initialise the static distribution
 const DNest4::Cauchy MyModel::cauchy(0.0, 1.0);
@@ -23,11 +23,11 @@ const DNest4::Cauchy MyModel::cauchy(0.0, 1.0);
 MyModel::MyModel()
 :dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
 ,noise_normals_h(pha_heg_p.bin_lo.size())
-,noise_normals_m(pha_meg_p.bin_lo.size())
+//,noise_normals_m(pha_meg_p.bin_lo.size())
 ,mu_hp(pha_heg_p.counts.size())
 ,mu_hm(pha_heg_m.counts.size())
-,mu_mp(pha_meg_p.counts.size())
-,mu_mm(pha_meg_m.counts.size())
+//,mu_mp(pha_meg_p.counts.size())
+//,mu_mm(pha_meg_m.counts.size())
 {
 }
 
@@ -126,19 +126,19 @@ void MyModel::calculate_mu()
 
 	const vector<double>& f_left_h = pha_heg_p.bin_lo;
 	const vector<double>& f_right_h = pha_heg_p.bin_hi;
-        const vector<double>& f_left_m = pha_meg_p.bin_lo;
-        const vector<double>& f_right_m = pha_meg_p.bin_hi;
+//        const vector<double>& f_left_m = pha_meg_p.bin_lo;
+//        const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
 
 	// assign constant background to model
 	mu_hp.assign(mu_hp.size(), background);
         mu_hm.assign(mu_hm.size(), background); 
-        mu_mp.assign(mu_mp.size(), background);
-        mu_mm.assign(mu_mm.size(), background);
+//        mu_mp.assign(mu_mp.size(), background);
+//        mu_mm.assign(mu_mm.size(), background);
 
 
 	mu_h.assign(mu_hp.size(), 0.0); // array 
-        mu_m.assign(mu_mp.size(), 0.0); // array 
+//        mu_m.assign(mu_mp.size(), 0.0); // array 
 
 	// get amplitudes and widths from the RJObject 
 	const vector< vector<double> >& dopplershiftcomponents = dopplershift.get_components();
@@ -192,32 +192,32 @@ void MyModel::calculate_mu()
                 		}	 
 			}
 
-                        int sm=0;
-                        for(size_t i=0; i<mu_m.size(); i++)
-                        {
-                                if (f_left_m[i] < f_min)
-                                       continue;
-                                if (f_right_m[i] > f_max)
-                                       continue;
-                                else
-                                {
-
-
-                                        for (int k=0; k<nlines; k++)
-                                                {
-                                                // Integral over the Lorentzian distribution
-                                                if (sign[k] < dopplershift.get_conditional_prior().get_pp())
-                                                        sm = -1;
-                                                else
-                                                        sm = 1;
-                                                if ((std::abs(f_right_m[i] - line_pos_shifted[k]) < 5.*width[k]) &&
-                                                   (std::abs(f_left_m[i] - line_pos_shifted[k]) < 5.*width[k]))
-                                                        mu_m[i] += sm*amplitude[k]*(gaussian_cdf(f_right_m[i], line_pos_shifted[k], width[k])
-                                                                                - gaussian_cdf(f_left_m[i], line_pos_shifted[k], width[k]));
-                                                }
-                                }
-                        }
-
+//                        int sm=0;
+//                        for(size_t i=0; i<mu_m.size(); i++)
+//                        {
+//                                if (f_left_m[i] < f_min)
+//                                       continue;
+//                                if (f_right_m[i] > f_max)
+//                                       continue;
+//                                else
+//                                {
+//
+//
+//                                        for (int k=0; k<nlines; k++)
+//                                                {
+//                                                // Integral over the Lorentzian distribution
+//                                                if (sign[k] < dopplershift.get_conditional_prior().get_pp())
+//                                                        sm = -1;
+//                                                else
+//                                                        sm = 1;
+//                                                if ((std::abs(f_right_m[i] - line_pos_shifted[k]) < 5.*width[k]) &&
+//                                                   (std::abs(f_left_m[i] - line_pos_shifted[k]) < 5.*width[k]))
+//                                                        mu_m[i] += sm*amplitude[k]*(gaussian_cdf(f_right_m[i], line_pos_shifted[k], width[k])
+//                                                                                - gaussian_cdf(f_left_m[i], line_pos_shifted[k], width[k]));
+//                                                }
+//                                }
+//                        }
+//
 	}
 
    
@@ -227,28 +227,29 @@ void MyModel::calculate_mu()
 		{
 			mu_hp[ ii ] = (mu_hp[ ii ] + mu_h[ ii ]) * pha_heg_p.arf.specresp[ ii ];
             		mu_hm[ ii ] = inst_fac_hm * (mu_hm[ ii ] + mu_h[ ii]) * pha_heg_m.arf.specresp[ ii ];
+                     
 
 		}
 
-        for (size_t ii = 0; ii < mu_m.size(); ii++ )
-                {
-                        mu_mp[ ii ] = inst_fac_mp * (mu_mp[ ii ] + mu_m[ ii ]) * pha_meg_p.arf.specresp[ ii ];
-                        mu_mm[ ii ] = inst_fac_mm * (mu_mm[ ii ] + mu_m[ ii]) * pha_meg_m.arf.specresp[ ii ];
-
-                }
-
-
+//        for (size_t ii = 0; ii < mu_m.size(); ii++ )
+//                {
+//                        mu_mp[ ii ] = inst_fac_mp * (mu_mp[ ii ] + mu_m[ ii ]) * pha_meg_p.arf.specresp[ ii ];
+//                        mu_mm[ ii ] = inst_fac_mm * (mu_mm[ ii ] + mu_m[ ii]) * pha_meg_m.arf.specresp[ ii ];
+//
+//                }
+//
+//
 
 
         // Compute the OU process
         vector<double> y_h(mu_h.size());
         double alpha = exp(-1./noise_L);
 
-        vector<double> y_m(mu_m.size());
+//        vector<double> y_m(mu_m.size());
 
 
-	// noise process could come both from the source or the detector!
- 	// which is why I put it in between the ARF and the RMF
+      // noise process could come both from the source or the detector!
+      // which is why I put it in between the ARF and the RMF
 	for(size_t i=0; i<mu_h.size(); i++)
 	{
 		if (f_left_h[i] < f_min)
@@ -270,24 +271,24 @@ void MyModel::calculate_mu()
 
         // noise process could come both from the source or the detector!
         // which is why I put it in between the ARF and the RMF
-        for(size_t i=0; i<mu_m.size(); i++)
-        {
-                if (f_left_m[i] < f_min)
-                        y_m[i]=1.0;
-                else if (f_right_m[i] > f_max)
-                        y_m[i]=1.0;
-
-                else if((f_left_m[i] < f_min) && (f_right_m[i] > f_min ))
-                        y_m[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_m[i];
-                else
-                        y_m[i] = alpha*y_m[i-1] + noise_sigma*noise_normals_m[i];
-                mu_mp[i] *= exp(y_m[i]);
-                mu_mm[i] *= exp(y_m[i]);
-
-        }
-
-        counts_mp.assign(mu_mp.size(), 0.0);
-        counts_mm.assign(mu_mm.size(), 0.0);
+//        for(size_t i=0; i<mu_m.size(); i++)
+//        {
+//                if (f_left_m[i] < f_min)
+//                        y_m[i]=1.0;
+//                else if (f_right_m[i] > f_max)
+//                        y_m[i]=1.0;
+//
+//                else if((f_left_m[i] < f_min) && (f_right_m[i] > f_min ))
+//                        y_m[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_m[i];
+//                else
+//                        y_m[i] = alpha*y_m[i-1] + noise_sigma*noise_normals_m[i];
+//                mu_mp[i] *= exp(y_m[i]);
+//                mu_mm[i] *= exp(y_m[i]);
+//
+//        }
+// 
+//        counts_mp.assign(mu_mp.size(), 0.0);
+//        counts_mm.assign(mu_mm.size(), 0.0);
 
         rmf_fold(mu_hp.size(), &mu_hp[0], 
 	  pha_heg_p.rmf.n_grp.size(), &pha_heg_p.rmf.n_grp[0],
@@ -305,27 +306,27 @@ void MyModel::calculate_mu()
           counts_hm.size(), &counts_hm[0],
           pha_heg_m.rmf.offset);
 
-        rmf_fold(mu_mp.size(), &mu_mp[0],
-          pha_meg_p.rmf.n_grp.size(), &pha_meg_p.rmf.n_grp[0],
-          pha_meg_p.rmf.f_chan.size(), &pha_meg_p.rmf.f_chan[0],
-          pha_meg_p.rmf.n_chan.size(), &pha_meg_p.rmf.n_chan[0],
-          pha_meg_p.rmf.matrix.size(), &pha_meg_p.rmf.matrix[0],
-          counts_mp.size(), &counts_mp[0],
-          pha_meg_p.rmf.offset);
-
-        rmf_fold(mu_mm.size(), &mu_mm[0],
-          pha_meg_m.rmf.n_grp.size(), &pha_meg_m.rmf.n_grp[0],
-          pha_meg_m.rmf.f_chan.size(), &pha_meg_m.rmf.f_chan[0],
-          pha_meg_m.rmf.n_chan.size(), &pha_meg_m.rmf.n_chan[0],
-          pha_meg_m.rmf.matrix.size(), &pha_meg_m.rmf.matrix[0],
-          counts_mm.size(), &counts_mm[0],
-          pha_meg_m.rmf.offset);
-
+//        rmf_fold(mu_mp.size(), &mu_mp[0],
+//          pha_meg_p.rmf.n_grp.size(), &pha_meg_p.rmf.n_grp[0],
+//          pha_meg_p.rmf.f_chan.size(), &pha_meg_p.rmf.f_chan[0],
+//          pha_meg_p.rmf.n_chan.size(), &pha_meg_p.rmf.n_chan[0],
+//          pha_meg_p.rmf.matrix.size(), &pha_meg_p.rmf.matrix[0],
+//          counts_mp.size(), &counts_mp[0],
+//          pha_meg_p.rmf.offset);
+//
+//        rmf_fold(mu_mm.size(), &mu_mm[0],
+//          pha_meg_m.rmf.n_grp.size(), &pha_meg_m.rmf.n_grp[0],
+//          pha_meg_m.rmf.f_chan.size(), &pha_meg_m.rmf.f_chan[0],
+//          pha_meg_m.rmf.n_chan.size(), &pha_meg_m.rmf.n_chan[0],
+//          pha_meg_m.rmf.matrix.size(), &pha_meg_m.rmf.matrix[0],
+//          counts_mm.size(), &counts_mm[0],
+//          pha_meg_m.rmf.offset);
+//
         counts_hp.resize(data.get_pha_heg_p().bin_lo.size());
         counts_hm.resize(data.get_pha_heg_m().bin_lo.size());
 
-	counts_mp.resize(data.get_pha_meg_p().bin_lo.size());
-        counts_mm.resize(data.get_pha_meg_m().bin_lo.size());
+//	counts_mp.resize(data.get_pha_meg_p().bin_lo.size());
+//        counts_mm.resize(data.get_pha_meg_m().bin_lo.size());
 
 }
 
@@ -340,12 +341,12 @@ void MyModel::from_prior(RNG& rng)
         inst_fac_hm = tan(M_PI*(0.97*rng.rand() - 0.485));
         inst_fac_hm = exp(inst_fac_hm);
 
-        inst_fac_mp = tan(M_PI*(0.97*rng.rand() - 0.485));
-        inst_fac_mp = exp(inst_fac_mp);
-
-        inst_fac_mm = tan(M_PI*(0.97*rng.rand() - 0.485));
-        inst_fac_mm = exp(inst_fac_mm);
-
+//        inst_fac_mp = tan(M_PI*(0.97*rng.rand() - 0.485));
+//        inst_fac_mp = exp(inst_fac_mp);
+//
+//        inst_fac_mm = tan(M_PI*(0.97*rng.rand() - 0.485));
+//        inst_fac_mm = exp(inst_fac_mm);
+//
 
 	dopplershift.from_prior(rng);
 
@@ -380,11 +381,11 @@ double MyModel::perturb(RNG& rng)
 				noise_normals_h[i] += rng.randh();
 				logH += -0.5*pow(noise_normals_h[i], 2);
 
-                                i = rng.rand_int(noise_normals_m.size());
-                                logH -= -0.5*pow(noise_normals_m[i], 2);
-                                noise_normals_m[i] += rng.randh();
-                                logH += -0.5*pow(noise_normals_m[i], 2);
-
+//                                i = rng.rand_int(noise_normals_m.size());
+//                                logH -= -0.5*pow(noise_normals_m[i], 2);
+//                                noise_normals_m[i] += rng.randh();
+//                                logH += -0.5*pow(noise_normals_m[i], 2);
+//
 
 
 			}
@@ -397,18 +398,18 @@ double MyModel::perturb(RNG& rng)
                     noise_normals_h[k] = rng.randn();
                 }
 
-                reps = (int)pow(noise_normals_m.size(), rng.rand());
-                for(int i=0; i<reps; ++i)
-                {
-                    int k = rng.rand_int(noise_normals_m.size());
-                    noise_normals_m[k] = rng.randn();
-                }
+//                reps = (int)pow(noise_normals_m.size(), rng.rand());
+//                for(int i=0; i<reps; ++i)
+//                {
+//                    int k = rng.rand_int(noise_normals_m.size());
+//                    noise_normals_m[k] = rng.randn();
+//                }
 			}
 		}
 	}
 	else
 	{
-		which = rng.rand_int(6);
+		which = rng.rand_int(4);
 		if(which == 0)
 		{
             background = log(background);
@@ -427,28 +428,28 @@ double MyModel::perturb(RNG& rng)
                         inst_fac_hm = exp(inst_fac_hm);
                 }
 
-                else if(which == 2)
-                {
-                        inst_fac_mp = log(inst_fac_mp);
-                        inst_fac_mp = (atan(inst_fac_mp)/M_PI + 0.485)/0.97;
-                        inst_fac_mp += rng.randh();
-                        inst_fac_mp = mod(inst_fac_mp, 1.);
-                        inst_fac_mp = tan(M_PI*(0.97*inst_fac_mp - 0.485));
-                        inst_fac_mp = exp(inst_fac_mp);
-                }
-
-                else if(which == 3)
-                {
-                        inst_fac_mm = log(inst_fac_mm);
-                        inst_fac_mm = (atan(inst_fac_mm)/M_PI + 0.485)/0.97;
-                        inst_fac_mm += rng.randh();
-                        inst_fac_mm = mod(inst_fac_mm, 1.);
-                        inst_fac_mm = tan(M_PI*(0.97*inst_fac_mm - 0.485));
-                        inst_fac_mm = exp(inst_fac_mm);
-                }
-
-
-		else if(which == 4)
+//                else if(which == 2)
+//                {
+//                        inst_fac_mp = log(inst_fac_mp);
+//                        inst_fac_mp = (atan(inst_fac_mp)/M_PI + 0.485)/0.97;
+//                        inst_fac_mp += rng.randh();
+//                        inst_fac_mp = mod(inst_fac_mp, 1.);
+//                        inst_fac_mp = tan(M_PI*(0.97*inst_fac_mp - 0.485));
+//                        inst_fac_mp = exp(inst_fac_mp);
+//                }
+//
+//                else if(which == 3)
+//                {
+//                        inst_fac_mm = log(inst_fac_mm);
+//                        inst_fac_mm = (atan(inst_fac_mm)/M_PI + 0.485)/0.97;
+//                        inst_fac_mm += rng.randh();
+//                        inst_fac_mm = mod(inst_fac_mm, 1.);
+//                        inst_fac_mm = tan(M_PI*(0.97*inst_fac_mm - 0.485));
+//                        inst_fac_mm = exp(inst_fac_mm);
+//                }
+//
+//
+		else if(which == 2)
 		{
 			noise_sigma = log(noise_sigma);
 			noise_sigma += log(1E3)*rng.randh();
@@ -472,12 +473,10 @@ double MyModel::log_likelihood() const
 {
         const vector<double>& f_mid_old = data.get_f_mid();
 
-//        const vector<double>& y = data.get_y();
-//	const vector<double>& yerr = data.get_yerr();
 	const PHAData& pha_heg_p = data.get_pha_heg_p();
         const PHAData& pha_heg_m = data.get_pha_heg_m();
-        const PHAData& pha_meg_p = data.get_pha_meg_p();
-        const PHAData& pha_meg_m = data.get_pha_meg_m();
+//        const PHAData& pha_meg_p = data.get_pha_meg_p();
+//        const PHAData& pha_meg_m = data.get_pha_meg_m();
 
 
 	const vector<double>& y_hp = pha_heg_p.counts;
@@ -485,16 +484,15 @@ double MyModel::log_likelihood() const
 	const vector<double>& f_left_h = pha_heg_p.bin_lo;
         const vector<double>& f_right_h = pha_heg_p.bin_hi;
 
-        const vector<double>& y_mp = pha_meg_p.counts;
-        const vector<double>& y_mm = pha_meg_m.counts;
-        const vector<double>& f_left_m = pha_meg_p.bin_lo;
-        const vector<double>& f_right_m = pha_meg_p.bin_hi;
+//        const vector<double>& y_mp = pha_meg_p.counts;
+//        const vector<double>& y_mm = pha_meg_m.counts;
+//        const vector<double>& f_left_m = pha_meg_p.bin_lo;
+//        const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
 	// I'm only interested in a specific region of the spectrum
 	// right now, so let's only look at that!
 
         const double& f_min = data.get_f_min();
-        //const double& f_max = data.get_f_max();
 	const double& f_max = data.get_f_max();
 
         double logl_hp = 0.;
@@ -513,29 +511,31 @@ double MyModel::log_likelihood() const
 				}
  		}
 
-        double logl_mp = 0.;
-        double logl_mm = 0.;
-            for(size_t i=0; i<y_mp.size(); i++)
-                {
-                        if (f_left_m[i] < f_min)
-                                continue;
-                        if (f_right_m[i] > f_max)
-                                continue;
-                        else
-                                {
-                                        logl_mp += -counts_mp[i] + y_mp[i]*log(counts_mp[i]) - gsl_sf_lngamma(y_mp[i] + 1.);
-                                        logl_mm += -counts_mm[i] + y_mm[i]*log(counts_mm[i]) - gsl_sf_lngamma(y_mm[i] + 1.);
-                                }
-                }
+//        double logl_mp = 0.;
+//        double logl_mm = 0.;
+//            for(size_t i=0; i<y_mp.size(); i++)
+//                {
+//                        if (f_left_m[i] < f_min)
+//                                continue;
+//                        if (f_right_m[i] > f_max)
+//                                continue;
+//                        else
+//                                {
+//                                        logl_mp += -counts_mp[i] + y_mp[i]*log(counts_mp[i]) - gsl_sf_lngamma(y_mp[i] + 1.);
+//                                        logl_mm += -counts_mm[i] + y_mm[i]*log(counts_mm[i]) - gsl_sf_lngamma(y_mm[i] + 1.);
+//                                }
+//                }
+//
+//
 
-
-
-	return logl_hp + logl_hm + logl_mp + logl_mm;
+//	return logl_hp + logl_hm + logl_mp + logl_mm;
+	return logl_hp + logl_hm;
 }
 
 void MyModel::print(std::ostream& out) const
 {
-        out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
+//        out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
+	out<<background<<' '<<inst_fac_hm<<' '<<noise_L<<' '<<noise_sigma<<' ';
         dopplershift.print(out);
 
         const double& f_min = data.get_f_min();
@@ -543,8 +543,8 @@ void MyModel::print(std::ostream& out) const
         const vector<double>& f_left_h = pha_heg_p.bin_lo;
         const vector<double>& f_right_h = pha_heg_p.bin_hi;
 
-        const vector<double>& f_left_m = pha_meg_p.bin_lo;
-        const vector<double>& f_right_m = pha_meg_p.bin_hi;
+//        const vector<double>& f_left_m = pha_meg_p.bin_lo;
+//        const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
 
 	for(size_t i=0; i<counts_hp.size(); i++)
@@ -567,25 +567,25 @@ void MyModel::print(std::ostream& out) const
 		                out<<counts_hm[i]<<' ';
 		}
 
-        for(size_t i=0; i<counts_mp.size(); i++)
-		{
-                        if (f_left_m[i] < f_min)
-                                continue;
-                        if (f_right_m[i] > f_max)
-                                continue;
-                        else
-		                out<<counts_mp[i]<<' ';
- 		}
-
-        for(size_t i=0; i<counts_mm.size(); i++)
-		{
-                        if (f_left_m[i] < f_min)
-                                continue;
-                        if (f_right_m[i] > f_max)
-                                continue;
-                        else
-		                out<<counts_mm[i]<<' ';  
-		}
+//        for(size_t i=0; i<counts_mp.size(); i++)
+//		{
+//                        if (f_left_m[i] < f_min)
+//                                continue;
+//                        if (f_right_m[i] > f_max)
+//                                continue;
+//                        else
+//		                out<<counts_mp[i]<<' ';
+// 		}
+//
+//        for(size_t i=0; i<counts_mm.size(); i++)
+//		{
+//                        if (f_left_m[i] < f_min)
+//                                continue;
+//                        if (f_right_m[i] > f_max)
+//                                continue;
+//                        else
+//		                out<<counts_mm[i]<<' ';  
+//		}
 }
 
 string MyModel::description() const
