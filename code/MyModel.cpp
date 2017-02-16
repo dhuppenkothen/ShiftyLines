@@ -247,23 +247,28 @@ void MyModel::calculate_mu()
 
 //        vector<double> y_m(mu_m.size());
 
+    // Convert from sd of innovations (noise_sigma) to sd of process
+    double noise_sd = noise_sigma / sqrt(1.0 - alpha*alpha);
 
-      // noise process could come both from the source or the detector!
-      // which is why I put it in between the ARF and the RMF
+	// noise process could come both from the source or the detector!
+ 	// which is why I put it in between the ARF and the RMF
 	for(size_t i=0; i<mu_h.size(); i++)
 	{
-		if (f_left_h[i] < f_min)
-			y_h[i]=1.0;
-		else if (f_right_h[i] > f_max)
-             		y_h[i]=1.0;
+        if(i == 0)
+            y_h[i] = noise_sigma*noise_normals_h[i];
+        else
+            y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
 
-	        else if((f_left_h[i] < f_min) && (f_right_h[i] > f_min ))
-	                y_h[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_h[i];
-	        else
-	                y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
-	        mu_hp[i] *= exp(y_h[i]);
+//		if (f_left_h[i] < f_min)
+//			y_h[i] = 0.0;
+//		else if (f_right_h[i] > f_max)
+//             		y_h[i] = 0.0;
+//        else if((f_left_h[i] < f_min) && (f_right_h[i] > f_min ))
+//                y_h[i] = noise_sigma*noise_normals_h[i];
+//        else
+//                y_h[i] = alpha*y_h[i-1] + noise_beta*noise_normals_h[i];
+        mu_hp[i] *= exp(y_h[i]);
 		mu_hm[i] *= exp(y_h[i]);
-
 	}
 
         counts_hp.assign(mu_hp.size(), 0.0);
@@ -351,8 +356,12 @@ void MyModel::from_prior(RNG& rng)
 	dopplershift.from_prior(rng);
 
 	// this, too belongs to the noise process we're not using 
-        noise_sigma = exp(log(1E-3) + log(1E3)*rng.rand());
-        noise_L = exp(log(0.01*Data::get_instance().get_f_range())
+    do
+    {
+    	noise_sigma = cauchy.generate(rng);
+    }while(noise_sigma < -20.0 || noise_sigma > 0.0);
+    noise_sigma = exp(noise_sigma);
+    noise_L = exp(log(0.01*Data::get_instance().get_f_range())
                         + log(1000)*rng.rand());
 
         calculate_mu();
@@ -451,10 +460,11 @@ double MyModel::perturb(RNG& rng)
 //
 		else if(which == 2)
 		{
-			noise_sigma = log(noise_sigma);
-			noise_sigma += log(1E3)*rng.randh();
-			wrap(noise_sigma, log(1E-3), log(1.));
-			noise_sigma = exp(noise_sigma);
+            noise_sigma = log(noise_sigma);
+            logH += cauchy.perturb(noise_sigma, rng);
+            if(noise_sigma < -20.0 || noise_sigma > 20.0)
+                return -1E300;
+            noise_sigma = exp(noise_sigma);
 		}
 		else
 		{
@@ -534,7 +544,7 @@ double MyModel::log_likelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
-//        out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
+        out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
 	out<<background<<' '<<inst_fac_hm<<' '<<noise_L<<' '<<noise_sigma<<' ';
         dopplershift.print(out);
 
