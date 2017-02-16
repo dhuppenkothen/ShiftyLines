@@ -462,7 +462,7 @@ double MyModel::perturb(RNG& rng)
 		{
             noise_sigma = log(noise_sigma);
             logH += cauchy.perturb(noise_sigma, rng);
-            if(noise_sigma < -20.0 || noise_sigma > 20.0)
+            if(noise_sigma < -20.0 || noise_sigma > 0.0)
                 return -1E300;
             noise_sigma = exp(noise_sigma);
 		}
