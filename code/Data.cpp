@@ -24,10 +24,10 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  pha_heg_p = load_fits(datadir, "heg_p1.pha");
-  pha_meg_p = load_fits(datadir, "meg_p1.pha");
-  pha_heg_m = load_fits(datadir, "heg_m1.pha");
-  pha_meg_m = load_fits(datadir, "meg_m1.pha");
+  pha_heg_p = load_fits(datadir, "fake_heg_p1_5ks_ident0_src.pha");
+  pha_meg_p = load_fits(datadir, "fake_meg_p1_5ks_ident0_src.pha");
+  pha_heg_m = load_fits(datadir, "fake_heg_m1_5ks_ident0_src.pha");
+  pha_meg_m = load_fits(datadir, "fake_meg_m1_5ks_ident0_src.pha");
 
 }
 
@@ -325,7 +325,7 @@ void Data::compute_summaries()
 	//f_min = *min_element(f_left.begin(), f_left.end());
 	//f_max = *max_element(f_right.begin(), f_right.end());
 	f_min = 1.746256187217072;
-	f_max = f_max = 2.0493255531922747;
+	f_max = 2.0493255531922747;
 	f_range = f_max - f_min;
 
 	// Left and right edges of the data bins
