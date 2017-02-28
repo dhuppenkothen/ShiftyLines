@@ -75,14 +75,14 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   spectrum.readKey("RESPFILE", respfile);
   spectrum.readKey("ANCRFILE", ancrfile);
 
-  string eunit_lo, eunit_hi;
-  spectrum.readKey("TUNIT2", eunit_lo);
-  spectrum.readKey("TUNIT3", eunit_hi);
+  //string eunit_lo, eunit_hi;
+  //spectrum.readKey("TUNIT2", eunit_lo);
+  //spectrum.readKey("TUNIT3", eunit_hi);
 
-  cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
+  //cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
 
-  pha.bin_lo_unit = eunit_lo;
-  pha.bin_hi_unit = eunit_hi;
+  //pha.bin_lo_unit = eunit_lo;
+  //pha.bin_hi_unit = eunit_hi;
 
   pha.respfile = respfile;
   pha.ancrfile = ancrfile;
