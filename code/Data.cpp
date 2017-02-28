@@ -322,8 +322,10 @@ void Data::load(const char* filename)
 
 void Data::compute_summaries()
 {
-	f_min = *min_element(f_left.begin(), f_left.end());
-	f_max = *max_element(f_right.begin(), f_right.end());
+	//f_min = *min_element(f_left.begin(), f_left.end());
+	//f_max = *max_element(f_right.begin(), f_right.end());
+	f_min = 1.746256187217072;
+	f_max = f_max = 2.0493255531922747;
 	f_range = f_max - f_min;
 
 	// Left and right edges of the data bins

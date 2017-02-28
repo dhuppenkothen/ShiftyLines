@@ -129,13 +129,11 @@ void MyModel::calculate_mu()
         const vector<double>& f_left_m = pha_meg_p.bin_lo;
         const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
-
 	// assign constant background to model
 	mu_hp.assign(mu_hp.size(), background);
         mu_hm.assign(mu_hm.size(), background); 
         mu_mp.assign(mu_mp.size(), background);
         mu_mm.assign(mu_mm.size(), background);
-
 
 	mu_h.assign(mu_hp.size(), 0.0); // array 
         mu_m.assign(mu_mp.size(), 0.0); // array 
