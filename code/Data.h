@@ -115,7 +115,6 @@ class Data
 		double get_f_range() const { return f_range; }
 		double get_min_df() const { return min_df; }
 		const int& get_nlines() const { return nlines; }
-		
 	// Singleton
 	private:
 		static Data instance;
