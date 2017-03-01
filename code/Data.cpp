@@ -340,10 +340,10 @@ void Data::compute_summaries()
 	const double dmin = -0.01;
 	const double dmax = 0.01;
 
-	f_min = l_min/(1. + dmax) - 0.01;
-	f_max = l_max/(1 + dmin) - 0.01;
-	//f_min = 1.746256187217072;
-	//f_max = 2.0493255531922747;
+	f_min = 6.0499997575723086;
+	f_max = 7.100000097785645;
+	//f_min = l_min/(1. + dmax) - 0.01;
+	//f_max = l_max/(1 + dmin) - 0.01;
 	f_range = f_max - f_min;
 
 	cout<<"Total energy range covered: "<<f_range<<"."<<endl;
