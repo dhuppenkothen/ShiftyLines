@@ -218,20 +218,30 @@ void MyModel::calculate_mu()
 
 	}
 
+
+        mu_hp_out.assign(mu_hp.size(), 0.0);
+        mu_hm_out.assign(mu_hm.size(), 0.0);
+        mu_mp_out.assign(mu_mp.size(), 0.0);
+        mu_mm_out.assign(mu_mm.size(), 0.0);
+
    
         // fold through the ARF
         // code taken from sherpa
         for (size_t ii = 0; ii < mu_h.size(); ii++ )
 		{
-			mu_hp[ ii ] = (mu_hp[ ii ] + mu_h[ ii ]) * pha_heg_p.arf.specresp[ ii ];
-            		mu_hm[ ii ] = inst_fac_hm * (mu_hm[ ii ] + mu_h[ ii]) * pha_heg_m.arf.specresp[ ii ];
+			mu_hp_out[ ii ] = (mu_hp[ ii ] + mu_h[ ii ]);
+			mu_hm_out[ ii ] = inst_fac_hm * (mu_hm[ ii ] + mu_h[ ii]);
+			mu_hp[ ii ] =  mu_hp_out[ ii ] * pha_heg_p.arf.specresp[ ii ];
+            		mu_hm[ ii ] = mu_hm_out[ ii ] * pha_heg_m.arf.specresp[ ii ];
 
 		}
 
         for (size_t ii = 0; ii < mu_m.size(); ii++ )
                 {
-                        mu_mp[ ii ] = inst_fac_mp * (mu_mp[ ii ] + mu_m[ ii ]) * pha_meg_p.arf.specresp[ ii ];
-                        mu_mm[ ii ] = inst_fac_mm * (mu_mm[ ii ] + mu_m[ ii]) * pha_meg_m.arf.specresp[ ii ];
+			mu_mp_out[ ii ] = inst_fac_mp * (mu_mp[ ii ] + mu_m[ ii ]);
+			mu_mm_out[ ii ] = inst_fac_mm * (mu_mm[ ii ] + mu_m[ ii]);
+                        mu_mp[ ii ] =  mu_mp_out[ ii ] * pha_meg_p.arf.specresp[ ii ];
+                        mu_mm[ ii ] = mu_mm_out[ ii ] * * pha_meg_m.arf.specresp[ ii ];
 
                 }
 
@@ -249,15 +259,20 @@ void MyModel::calculate_mu()
  	// which is why I put it in between the ARF and the RMF
 	for(size_t i=0; i<mu_h.size(); i++)
 	{
-		if (f_left_h[i] < f_min)
-			y_h[i]=1.0;
-		else if (f_right_h[i] > f_max)
-             		y_h[i]=1.0;
+        if(i == 0)
+            y_h[i] = noise_sigma*noise_normals_h[i];
+        else
+            y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
 
-	        else if((f_left_h[i] < f_min) && (f_right_h[i] > f_min ))
-	                y_h[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_h[i];
-	        else
-	                y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
+		if (f_left_h[i] < f_min)
+			y_h[i]=0.0;
+		else if (f_right_h[i] > f_max)
+             		y_h[i]=0.0;
+
+//	        else if((f_left_h[i] < f_min) && (f_right_h[i] > f_min ))
+//	                y_h[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_h[i];
+//	        else
+//	                y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
 	        mu_hp[i] *= exp(y_h[i]);
 		mu_hm[i] *= exp(y_h[i]);
 
@@ -448,10 +463,12 @@ double MyModel::perturb(RNG& rng)
 
 		else if(which == 4)
 		{
-			noise_sigma = log(noise_sigma);
-			noise_sigma += log(1E3)*rng.randh();
-			wrap(noise_sigma, log(1E-3), log(1.));
-			noise_sigma = exp(noise_sigma);
+	       		noise_sigma = log(noise_sigma);
+	        	logH += cauchy.perturb(noise_sigma, rng);
+        		if(noise_sigma < -20.0 || noise_sigma > 0.0)
+                		return -1E300;
+            		noise_sigma = exp(noise_sigma);
+
 		}
 		else
 		{
@@ -543,6 +560,46 @@ void MyModel::print(std::ostream& out) const
 
         const vector<double>& f_left_m = pha_meg_p.bin_lo;
         const vector<double>& f_right_m = pha_meg_p.bin_hi;
+
+        for(size_t i=0; i<mu_hp_out.size(); i++)
+                {
+                        if (f_left_h[i] < f_min)
+                                continue;
+                        if (f_right_h[i] > f_max)
+                                continue;
+                        else
+                                out<<mu_hp_out[i]<<' ';
+                }
+
+        for(size_t i=0; i<mu_hm_out.size(); i++)
+                {
+                        if (f_left_h[i] < f_min)
+                                continue;
+                        if (f_right_h[i] > f_max)
+                                continue;
+                        else
+                                out<<mu_hm_out[i]<<' ';
+                }
+
+        for(size_t i=0; i<mu_mp_out.size(); i++)
+                {
+                        if (f_left_m[i] < f_min)
+                                continue;
+                        if (f_right_m[i] > f_max)
+                                continue;
+                        else
+                                out<<mu_mp_out[i]<<' ';
+                }
+
+        for(size_t i=0; i<mu_mm_out.size(); i++)
+                {
+                        if (f_left_m[i] < f_min)
+                                continue;
+                        if (f_right_m[i] > f_max)
+                                continue;
+                        else
+                                out<<mu_mm_out[i]<<' ';
+                }
 
 
 	for(size_t i=0; i<counts_hp.size(); i++)
