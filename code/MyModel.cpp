@@ -259,15 +259,15 @@ void MyModel::calculate_mu()
  	// which is why I put it in between the ARF and the RMF
 	for(size_t i=0; i<mu_h.size(); i++)
 	{
-        if(i == 0)
-            y_h[i] = noise_sigma*noise_normals_h[i];
-        else
-            y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
+	        if(i == 0)
+	            	y_h[i] = noise_sigma*noise_normals_h[i];
+        	else
+            		y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
 
-		if (f_left_h[i] < f_min)
-			y_h[i]=0.0;
-		else if (f_right_h[i] > f_max)
-             		y_h[i]=0.0;
+//		if (f_left_h[i] < f_min)
+//			y_h[i]=0.0;
+//		else if (f_right_h[i] > f_max)
+//             		y_h[i]=0.0;
 
 //	        else if((f_left_h[i] < f_min) && (f_right_h[i] > f_min ))
 //	                y_h[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_h[i];
@@ -285,15 +285,21 @@ void MyModel::calculate_mu()
         // which is why I put it in between the ARF and the RMF
         for(size_t i=0; i<mu_m.size(); i++)
         {
-                if (f_left_m[i] < f_min)
-                        y_m[i]=1.0;
-                else if (f_right_m[i] > f_max)
-                        y_m[i]=1.0;
-
-                else if((f_left_m[i] < f_min) && (f_right_m[i] > f_min ))
-                        y_m[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_m[i];
+		if(i == 0)
+                        y_m[i] = noise_sigma*noise_normals_m[i];
                 else
-                        y_m[i] = alpha*y_m[i-1] + noise_sigma*noise_normals_m[i];
+                        y_m[i] = alpha*y_m[i-1] + noise_sigma*noise_normals_m[i];	
+
+
+//                if (f_left_m[i] < f_min)
+//                        y_m[i]=1.0;
+//                else if (f_right_m[i] > f_max)
+//                        y_m[i]=1.0;
+//
+//                else if((f_left_m[i] < f_min) && (f_right_m[i] > f_min ))
+//                        y_m[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_m[i];
+//                else
+//                        y_m[i] = alpha*y_m[i-1] + noise_sigma*noise_normals_m[i];
                 mu_mp[i] *= exp(y_m[i]);
                 mu_mm[i] *= exp(y_m[i]);
 
