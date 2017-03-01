@@ -280,12 +280,12 @@ void Data::load_lines(const char* filename)
 	// ASSUME DATA IS IN KEV. IF NOT, THEN CONVERT IT TO KEV!
         double temp1;
         while(fin>>temp1)
-                if (pha.bin_lo_unit == "angstrom")
-	                lines.push_back(conv/temp1);
-		else if (pha.bin_lo_unit == "kev")
+                //if (pha.bin_lo_unit == "angstrom")
+	        //        lines.push_back(conv/temp1);
+		//else if (pha.bin_lo_unit == "kev")
 			lines.push_back(temp1);
-		else
-			throw CCfits::Column::InvalidDataType(); 
+		//else
+		//	throw CCfits::Column::InvalidDataType(); 
 
 	nlines = lines.size();
 
