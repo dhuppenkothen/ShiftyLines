@@ -357,15 +357,35 @@ void MyModel::from_prior(RNG& rng)
     }while(std::abs(background) > 25.0);
     background = exp(background);
 
-        inst_fac_hm = tan(M_PI*(0.97*rng.rand() - 0.485));
-        inst_fac_hm = exp(inst_fac_hm);
 
-        inst_fac_mp = tan(M_PI*(0.97*rng.rand() - 0.485));
+	do
+	{
+		inst_fac_hm = cauchy.generate(rng);
+	}while(std::abs(inst_fac_hm) > 25.0);
+    	inst_fac_hm = exp(inst_fac_hm);
+
+
+        do
+        {
+                inst_fac_mp = cauchy.generate(rng);
+        }while(std::abs(inst_fac_mp) > 25.0);
         inst_fac_mp = exp(inst_fac_mp);
 
-        inst_fac_mm = tan(M_PI*(0.97*rng.rand() - 0.485));
+        do
+        {
+                inst_fac_mm = cauchy.generate(rng);
+        }while(std::abs(inst_fac_mm) > 25.0);
         inst_fac_mm = exp(inst_fac_mm);
 
+//        inst_fac_hm = tan(M_PI*(0.97*rng.rand() - 0.485));
+//        inst_fac_hm = exp(inst_fac_hm);
+//
+//        inst_fac_mp = tan(M_PI*(0.97*rng.rand() - 0.485));
+//        inst_fac_mp = exp(inst_fac_mp);
+//
+//        inst_fac_mm = tan(M_PI*(0.97*rng.rand() - 0.485));
+//        inst_fac_mm = exp(inst_fac_mm);
+//
 
 	dopplershift.from_prior(rng);
 
