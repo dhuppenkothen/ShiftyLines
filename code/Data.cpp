@@ -282,12 +282,13 @@ void Data::load_lines(const char* filename)
 	// ASSUME DATA IS IN KEV. IF NOT, THEN CONVERT IT TO KEV!
         double temp1;
         while(fin>>temp1)
-                if (pha.bin_lo_unit == "angstrom")
-	                lines.push_back(conv/temp1);
-		else if (pha.bin_lo_unit == "kev")
+                //if (pha.bin_lo_unit == "angstrom")
+	        //        lines.push_back(conv/temp1);
+		//else if (pha.bin_lo_unit == "keV")
 			lines.push_back(temp1);
-		else
-			throw CCfits::Column::InvalidDataType(); 
+		//else
+		//	throw CCfits::Column::InvalidDataType(); 
+
 
 	nlines = lines.size();
 
@@ -334,11 +335,11 @@ void Data::compute_summaries()
 
 	// ASSUME DATA IS IN KEV!!
 	
-	const double l_min = lines[0];
-	const double l_max = lines[lines.size()-1];
+	//const double l_min = lines[0];
+	//const double l_max = lines[lines.size()-1];
 
-	const double dmin = -0.01;
-	const double dmax = 0.01;
+	//const double dmin = -0.01;
+	//const double dmax = 0.01;
 
 	f_min = 6.0499997575723086;
 	f_max = 7.100000097785645;
