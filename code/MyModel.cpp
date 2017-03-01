@@ -439,7 +439,7 @@ double MyModel::perturb(RNG& rng)
 		}
                 else if(which == 1)
                 {
-//                        inst_fac_hm = log(inst_fac_hm);
+                        inst_fac_hm = log(inst_fac_hm);
 //                        inst_fac_hm = (atan(inst_fac_hm)/M_PI + 0.485)/0.97;
 //                        inst_fac_hm += rng.randh();
 //                        inst_fac_hm = mod(inst_fac_hm, 1.);
@@ -448,16 +448,16 @@ double MyModel::perturb(RNG& rng)
                         logH += cauchy.perturb(inst_fac_hm, rng);
                         if(std::abs(inst_fac_hm) > 25.0)
                                 logH = -1E300;
-
+			inst_fac_hm = exp(inst_fac_hm);
                 }
 
                 else if(which == 2)
                 {
-
+			inst_fac_mp = log(inst_fac_mp);
                         logH += cauchy.perturb(inst_fac_mp, rng);
                         if(std::abs(inst_fac_mp) > 25.0)
                                 logH = -1E300;
-
+			inst_fac_mp = exp(inst_fac_mp);
 //                        inst_fac_mp = log(inst_fac_mp);
 //                        inst_fac_mp = (atan(inst_fac_mp)/M_PI + 0.485)/0.97;
 //                        inst_fac_mp += rng.randh();
@@ -468,10 +468,11 @@ double MyModel::perturb(RNG& rng)
 
                 else if(which == 3)
                 {
+			inst_fac_mm = log(inst_fac_mm);
                         logH += cauchy.perturb(inst_fac_mm, rng);
                         if(std::abs(inst_fac_mm) > 25.0)
                                 logH = -1E300;
-
+			inst_fac_mm = exp(inst_fac_mm);
 //                        inst_fac_mm = log(inst_fac_mm);
 //                        inst_fac_mm = (atan(inst_fac_mm)/M_PI + 0.485)/0.97;
 //                        inst_fac_mm += rng.randh();
