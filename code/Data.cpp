@@ -1,4 +1,5 @@
 #include "Data.h"
+#include "MyConditionalPrior.h"
 #include <iostream>
 #include <fstream>
 #include <algorithm>
@@ -38,8 +39,6 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   strcat(whole_file, filename);
   strcpy(pha.filename, whole_file);
 
-
-
   CCfits::FITS::setVerboseMode(true);
 
   // Open file for reading
@@ -75,9 +74,10 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   spectrum.readKey("RESPFILE", respfile);
   spectrum.readKey("ANCRFILE", ancrfile);
 
-  //string eunit_lo, eunit_hi;
-  //spectrum.readKey("TUNIT2", eunit_lo);
-  //spectrum.readKey("TUNIT3", eunit_hi);
+  string eunit_lo, eunit_hi;
+
+  eunit_lo = column3.unit();
+  eunit_hi = column4.unit();
 
   //cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
 
@@ -266,6 +266,8 @@ ARFData Data::load_arf(const char* datadir, const char* filename)
 
 void Data::load_lines(const char* filename)
 {
+	double conv = 12.3984191;
+
 	fstream fin(filename, ios::in);
 	if(!fin)
 	{
@@ -275,23 +277,28 @@ void Data::load_lines(const char* filename)
 
 	lines.clear();
 
+	// ASSUME DATA IS IN KEV. IF NOT, THEN CONVERT IT TO KEV!
         double temp1;
         while(fin>>temp1)
-                lines.push_back(temp1);
+                if (pha.bin_lo_unit == "angstrom")
+	                lines.push_back(conv/temp1);
+		else if (pha.bin_lo_unit == "kev")
+			lines.push_back(temp1);
+		else
+			throw CCfits::Column::InvalidDataType(); 
 
 	nlines = lines.size();
 
         fin.close();
         cout<<"# Found "<<lines.size()<<" line positions in "<<filename<<"."<<endl;
-	
-	
-
 }
-
 
 
 void Data::load(const char* filename)
 {
+
+        double conv = 12.3984191;
+
 	fstream fin(filename, ios::in);
 	if(!fin)
 	{
@@ -322,11 +329,22 @@ void Data::load(const char* filename)
 
 void Data::compute_summaries()
 {
-	//f_min = *min_element(f_left.begin(), f_left.end());
-	//f_max = *max_element(f_right.begin(), f_right.end());
 	f_min = 1.746256187217072;
 	f_max = 2.0493255531922747;
+
+	// ASSUME DATA IS IN KEV!!
+	
+	const double l_min = lines[0];
+	const double l_max = lines[lines.size()-1];
+
+	const double dmin = -0.01;
+	const double dmax = 0.01;
+
+	//f_min = l_min/(1. + dmax) - 0.01;
+	//f_max = l_max/(1 + dmin) - 0.01;
 	f_range = f_max - f_min;
+
+	cout<<"Total energy range covered: "<<f_range<<"."<<endl;
 
 	// Left and right edges of the data bins
 	f_mid.assign(f_left.size(), 0.);
