@@ -241,7 +241,7 @@ void MyModel::calculate_mu()
 			mu_mp_out[ ii ] = inst_fac_mp * (mu_mp[ ii ] + mu_m[ ii ]);
 			mu_mm_out[ ii ] = inst_fac_mm * (mu_mm[ ii ] + mu_m[ ii]);
                         mu_mp[ ii ] =  mu_mp_out[ ii ] * pha_meg_p.arf.specresp[ ii ];
-                        mu_mm[ ii ] = mu_mm_out[ ii ] * * pha_meg_m.arf.specresp[ ii ];
+                        mu_mm[ ii ] = mu_mm_out[ ii ] * pha_meg_m.arf.specresp[ ii ];
 
                 }
 
@@ -485,10 +485,7 @@ double MyModel::perturb(RNG& rng)
 
 double MyModel::log_likelihood() const
 {
-        const vector<double>& f_mid_old = data.get_f_mid();
 
-//        const vector<double>& y = data.get_y();
-//	const vector<double>& yerr = data.get_yerr();
 	const PHAData& pha_heg_p = data.get_pha_heg_p();
         const PHAData& pha_heg_m = data.get_pha_heg_m();
         const PHAData& pha_meg_p = data.get_pha_meg_p();
