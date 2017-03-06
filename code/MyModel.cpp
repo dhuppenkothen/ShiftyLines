@@ -236,7 +236,7 @@ void MyModel::calculate_mu()
         for (size_t ii = 0; ii < mu_h.size(); ii++ )
 		{
 			mu_hp_out[ ii ] =  (mu_hp[ ii ] + mu_h[ ii ]);
-			mu_hm_out[ ii ] = inst_fac_hm * (mu_hm[ ii ] + mu_h[ ii]);
+			mu_hm_out[ ii ] =  (mu_hm[ ii ] + mu_h[ ii]);
 
 			mu_hp[ ii ] = mu_hp_out[ ii ] * pha_heg_p.arf.specresp[ ii ];
             		mu_hm[ ii ] = mu_hm_out[ ii ] * pha_heg_m.arf.specresp[ ii ];
@@ -245,8 +245,8 @@ void MyModel::calculate_mu()
  
         for (size_t ii = 0; ii < mu_m.size(); ii++ )
                 {
-			mu_mp_out[ ii ] =  inst_fac_mp * (mu_mp[ ii ] + mu_m[ ii ]);
-			mu_mm_out[ ii ] = inst_fac_mm * (mu_mm[ ii ] + mu_m[ ii]);
+			mu_mp_out[ ii ] = (mu_mp[ ii ] + mu_m[ ii ]);
+			mu_mm_out[ ii ] = (mu_mm[ ii ] + mu_m[ ii]);
 
                         mu_mp[ ii ] = mu_mp_out[ ii ] * pha_meg_p.arf.specresp[ ii ];
                         mu_mm[ ii ] = mu_mm_out[ ii ] * pha_meg_m.arf.specresp[ ii ];
@@ -281,7 +281,9 @@ void MyModel::calculate_mu()
 //	        else
 //	                y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
 	        mu_hp[i] *= exp(y_h[i]);
-		mu_hm[i] *= exp(y_h[i]);
+		mu_hm[i] *= (inst_fac_hm * exp(y_h[i]));
+		mu_hp_out[ i ] *= exp(y_h[ i ]);
+                mu_hm_out[ i ] *= exp(y_h[ i ]);
 
 	}
 
@@ -307,8 +309,10 @@ void MyModel::calculate_mu()
 //                        y_m[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_m[i];
 //                else
 //                        y_m[i] = alpha*y_m[i-1] + noise_sigma*noise_normals_m[i];
-                mu_mp[i] *= exp(y_m[i]);
-                mu_mm[i] *= exp(y_m[i]);
+                mu_mp[i] *= (inst_fac_mp * exp(y_m[i]));
+                mu_mm[i] *= (inst_fac_mm * exp(y_m[i]));
+                mu_mp_out[ i ] *= exp(y_m[ i ]);
+                mu_mm_out[ i ] *= exp(y_m[ i ]);
 
         }
 
