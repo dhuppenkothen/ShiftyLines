@@ -40,10 +40,11 @@ class MyModel
 		// need to fix that some time!
 		std::vector<double> mu_h;
  		std::vector<double> mu_m;
-		std::vector<double> mu_hp;
-		std::vector<double> mu_hm;
                 std::vector<double> mu_hp_out;
                 std::vector<double> mu_hm_out;
+
+		std::vector<double> mu_hp;
+		std::vector<double> mu_hm;
 
                 std::vector<double> counts_hp;
                 std::vector<double> counts_hm;

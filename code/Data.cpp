@@ -25,10 +25,10 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  pha_heg_p = load_fits(datadir, "heg_p1.pha");
-  pha_meg_p = load_fits(datadir, "meg_p1.pha");
-  pha_heg_m = load_fits(datadir, "heg_m1.pha");
-  pha_meg_m = load_fits(datadir, "meg_m1.pha");
+  pha_heg_p = load_fits(datadir, "fake_heg_p1_5ks_ident0_src.pha");
+  pha_meg_p = load_fits(datadir, "fake_meg_p1_5ks_ident0_src.pha");
+  pha_heg_m = load_fits(datadir, "fake_heg_m1_5ks_ident0_src.pha");
+  pha_meg_m = load_fits(datadir, "fake_meg_m1_5ks_ident0_src.pha");
 
 }
 
@@ -75,16 +75,14 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   spectrum.readKey("ANCRFILE", ancrfile);
 
   string eunit_lo, eunit_hi;
-//  spectrum.readKey("TUNIT2", eunit_lo);
-//  spectrum.readKey("TUNIT3", eunit_hi);
 
   eunit_lo = column3.unit();
   eunit_hi = column4.unit();
 
-  cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
+  //cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
 
-  pha.bin_lo_unit = eunit_lo;
-  pha.bin_hi_unit = eunit_hi;
+  //pha.bin_lo_unit = eunit_lo;
+  //pha.bin_hi_unit = eunit_hi;
 
   pha.respfile = respfile;
   pha.ancrfile = ancrfile;
@@ -284,11 +282,10 @@ void Data::load_lines(const char* filename)
         while(fin>>temp1)
                 //if (pha.bin_lo_unit == "angstrom")
 	        //        lines.push_back(conv/temp1);
-		//else if (pha.bin_lo_unit == "keV")
+		//else if (pha.bin_lo_unit == "kev")
 			lines.push_back(temp1);
 		//else
 		//	throw CCfits::Column::InvalidDataType(); 
-
 
 	nlines = lines.size();
 
@@ -332,6 +329,8 @@ void Data::load(const char* filename)
 
 void Data::compute_summaries()
 {
+	f_min = 1.746256187217072;
+	f_max = 2.0493255531922747;
 
 	// ASSUME DATA IS IN KEV!!
 	
@@ -341,8 +340,6 @@ void Data::compute_summaries()
 	//const double dmin = -0.01;
 	//const double dmax = 0.01;
 
-	f_min = 6.0499997575723086;
-	f_max = 7.100000097785645;
 	//f_min = l_min/(1. + dmax) - 0.01;
 	//f_max = l_max/(1 + dmin) - 0.01;
 	f_range = f_max - f_min;
