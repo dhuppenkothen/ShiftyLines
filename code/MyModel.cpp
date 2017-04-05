@@ -129,6 +129,8 @@ void MyModel::calculate_mu()
         const vector<double>& f_left_m = pha_meg_p.bin_lo;
         const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
+	const <double>& eunit = pha.bin_lo_unit;
+
 	// assign constant background to model
 	mu_hp.assign(mu_hp.size(), background);
         mu_hm.assign(mu_hm.size(), background); 
@@ -163,7 +165,10 @@ void MyModel::calculate_mu()
 	
 			for (int i=0; i<nlines; i++)
 				{
-					line_pos_shifted[i] = line_pos[i]*(1. + dshift);
+					if (eunit == "keV")
+						line_pos_shifted[i] = line_pos[i]*(1.0/(1. + dshift));
+					if (eunit == "angstrom")
+						line_pos_shifted[i] = line_pos[i]*(1. + dshift);
 					amplitude[i] = exp(dopplershiftcomponents[j][i+1]);
 					//logq[i] = dopplershiftcomponents[j][i+1+nlines];
       					sign[i] = dopplershiftcomponents[j][i+1+2*nlines];		
