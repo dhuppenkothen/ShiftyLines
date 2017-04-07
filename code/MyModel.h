@@ -47,7 +47,7 @@ class MyModel
                 std::vector<double> mu_hm_out;
 
 		std::vector<double> mu_hp_specresp;
-
+		std::vector<double> mu_with_ou;
 		std::vector<double> mu_hp;
 		std::vector<double> mu_hm;
 

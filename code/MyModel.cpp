@@ -271,6 +271,9 @@ void MyModel::calculate_mu()
 
 	// noise process could come both from the source or the detector!
  	// which is why I put it in between the ARF and the RMF
+
+	mu_with_ou.assign(mu_hp.size(), 0.0);
+
 	for(size_t i=0; i<mu_h.size(); i++)
 	{
 	        if(i == 0)
@@ -278,7 +281,7 @@ void MyModel::calculate_mu()
        	 	else
             		y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
 
-	        mu_hp[i] *= exp(y_h[i]);
+	        mu_with_ou[i] = mu_hp[i] * exp(y_h[i]);
 		//mu_hm[i] *= (inst_fac_hm * exp(y_h[i]));
 		//mu_hp_out[ i ] *= exp(y_h[ i ]);
                 //mu_hm_out[ i ] *= exp(y_h[ i ]);
@@ -307,7 +310,7 @@ void MyModel::calculate_mu()
 //        counts_mp.assign(mu_mp.size(), 0.0);
 //        counts_mm.assign(mu_mm.size(), 0.0);
 
-        rmf_fold(mu_hp.size(), &mu_hp[0], 
+        rmf_fold(mu_hp.size(), &mu_with_ou[0], 
 	  pha_heg_p.rmf.n_grp.size(), &pha_heg_p.rmf.n_grp[0],
 	  pha_heg_p.rmf.f_chan.size(), &pha_heg_p.rmf.f_chan[0],
 	  pha_heg_p.rmf.n_chan.size(), &pha_heg_p.rmf.n_chan[0],
@@ -635,7 +638,7 @@ void MyModel::print(std::ostream& out) const
                         if (f_right_h[i] > f_max)
                                 continue;
                         else
-                                out<<mu_hp[i]<<' ';
+                                out<<mu_with_ou[i]<<' ';
                 }
 
 
