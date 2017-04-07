@@ -132,10 +132,10 @@ void MyModel::calculate_mu()
 	const string& eunit = pha_heg_p.bin_lo_unit;
 
 	// assign constant background to mode
-	mu_hp.assign(mu_hp.size(), background);
-//        mu_hm.assign(mu_hm.size(), background); 
-//        mu_mp.assign(mu_mp.size(), background);
-//        mu_mm.assign(mu_mm.size(), background);
+	mu_hp.assign(mu_hp.size(), 0.0);
+//        mu_hm.assign(mu_hm.size(), 0.0); 
+//        mu_mp.assign(mu_mp.size(), 0.0);
+//        mu_mm.assign(mu_mm.size(), 0.0);
 
 	mu_h.assign(mu_hp.size(), 0.0); // array 
 //        mu_m.assign(mu_mp.size(), 0.0); // array 
@@ -237,10 +237,10 @@ void MyModel::calculate_mu()
         // code taken from sherpa
         for (size_t ii = 0; ii < mu_h.size(); ii++ )
 		{
-			mu_hp_out[ ii ] =  (mu_hp[ ii ] + mu_h[ ii ]);
+			mu_hp_out[ ii ] =  exp(log(background) + mu_h[ ii ]);
 //			mu_hm_out[ ii ] =  (mu_hm[ ii ] + mu_h[ ii]);
 
-			mu_hp[ ii ] += mu_h[ ii ];
+			mu_hp[ ii ] = exp(log(background) + mu_h[ ii ]);
                         mu_hp[ ii ] *= pha_heg_p.arf.specresp[ ii ];
 
 			mu_hp_specresp[ ii ] = (mu_hp[ ii ] + mu_h[ ii ]) * pha_heg_p.arf.specresp[ ii ]; 
@@ -250,8 +250,8 @@ void MyModel::calculate_mu()
  
 //        for (size_t ii = 0; ii < mu_m.size(); ii++ )
 //                {
-//			mu_mp_out[ ii ] = (mu_mp[ ii ] + mu_m[ ii ]);
-//			mu_mm_out[ ii ] = (mu_mm[ ii ] + mu_m[ ii]);
+//			mu_mp_out[ ii ] = exp(log(background) + mu_m[ ii ]);
+//			mu_mm_out[ ii ] = exp(log(background) + mu_m[ ii]);
 //
 //                        mu_mp[ ii ] = mu_mp_out[ ii ] * pha_meg_p.arf.specresp[ ii ];
 //                        mu_mm[ ii ] = mu_mm_out[ ii ] * pha_meg_m.arf.specresp[ ii ];
