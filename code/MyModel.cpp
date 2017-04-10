@@ -276,13 +276,15 @@ void MyModel::calculate_mu()
 
 	for(size_t i=0; i<mu_h.size(); i++)
 	{
-	        if(i == 0)
-        	    	y_h[i] = noise_sigma*noise_normals_h[i];
-       	 	else
-            		y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
+//	        if(i == 0)
+//        	    	y_h[i] = noise_sigma*noise_normals_h[i];
+//       	 	else
+//            		y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
+//
+		mu_with_ou[i] = mu_hp[i];
+	        //mu_with_ou[i] = mu_hp[i] * exp(y_h[i]);
 
 
-	        mu_with_ou[i] = mu_hp[i] * exp(y_h[i]);
 		//mu_hm[i] *= (inst_fac_hm * exp(y_h[i]));
 		//mu_hp_out[ i ] *= exp(y_h[ i ]);
                 //mu_hm_out[ i ] *= exp(y_h[ i ]);
