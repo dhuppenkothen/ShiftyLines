@@ -243,7 +243,7 @@ void MyModel::calculate_mu()
 			mu_hp[ ii ] = exp(log(background) + mu_h[ ii ]);
                         mu_hp[ ii ] *= pha_heg_p.arf.specresp[ ii ];
 
-			mu_hp_specresp[ ii ] = (mu_hp[ ii ] + mu_h[ ii ]) * pha_heg_p.arf.specresp[ ii ]; 
+			mu_hp_specresp[ ii ] = mu_hp_out[ ii ] * pha_heg_p.arf.specresp[ ii ]; 
 //            		mu_hm[ ii ] = mu_hm_out[ ii ] * pha_heg_m.arf.specresp[ ii ];
 
 		}
@@ -280,6 +280,7 @@ void MyModel::calculate_mu()
         	    	y_h[i] = noise_sigma*noise_normals_h[i];
        	 	else
             		y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
+
 
 	        mu_with_ou[i] = mu_hp[i] * exp(y_h[i]);
 		//mu_hm[i] *= (inst_fac_hm * exp(y_h[i]));
@@ -564,6 +565,8 @@ double MyModel::log_likelihood() const
 
 void MyModel::print(std::ostream& out) const
 {
+
+	out.precision(25);
 //        out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
 	out<<background<<' '<<noise_L<<' '<<noise_sigma<<' ';
 
