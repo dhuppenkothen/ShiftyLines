@@ -23,6 +23,8 @@ class MyModel
 
 		// A flat background level
 		double background;
+		double slope;
+
 		double inst_fac_hm;
                 double inst_fac_mp;
                 double inst_fac_mm;
@@ -45,6 +47,8 @@ class MyModel
  		std::vector<double> mu_m;
                 std::vector<double> mu_hp_out;
                 std::vector<double> mu_hm_out;
+
+		std::vector<double> mu_bkg;
 
 		std::vector<double> mu_hp_specresp;
 		std::vector<double> mu_with_ou;

@@ -81,7 +81,6 @@ void MyModel::rmf_fold(IndexType len_source, const ConstFloatType *source,
 //             ( UIndexType(*first_chan_tmp) < offset ) )
 //                //throw RMFConvolutionFailure();
 
-
         counts_tmp = counts + *first_chan_tmp - offset;
         current_num_chans = *num_chans_tmp;
         first_chan_tmp++;
@@ -93,7 +92,6 @@ void MyModel::rmf_fold(IndexType len_source, const ConstFloatType *source,
 //                throw RMFConvolutionFailure();
 
         while ( current_num_chans ) {
-
           *counts_tmp += *resp_tmp * source_bin_ii;
           counts_tmp++;
           resp_tmp++;
@@ -126,6 +124,8 @@ void MyModel::calculate_mu()
 
 	const vector<double>& f_left_h = pha_heg_p.bin_lo;
 	const vector<double>& f_right_h = pha_heg_p.bin_hi;
+	const vector<double>& f_mid_h = pha_heg_p.bin_mid;
+		
 //        const vector<double>& f_left_m = pha_meg_p.bin_lo;
 //        const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
@@ -139,6 +139,7 @@ void MyModel::calculate_mu()
 
 	mu_h.assign(mu_hp.size(), 0.0); // array 
 //        mu_m.assign(mu_mp.size(), 0.0); // array 
+	mu_bkg.assign(mu_hp.size(), 0.0);
 
         mu_hp_out.assign(mu_hp.size(), 0.0);
 	mu_hp_specresp.assign(mu_hp.size(), 0.0);
@@ -200,6 +201,8 @@ void MyModel::calculate_mu()
 							mu_h[i] += sh*amplitude[k]*(gaussian_cdf(f_right_h[i], line_pos_shifted[k], width[k])
 										- gaussian_cdf(f_left_h[i], line_pos_shifted[k], width[k]));
 					}
+//					mu_bkg[i] = 0.5*slope*(f_right_h[i]*f_right_h[i] - f_left_h[i]*f_left_h[i]) + background*(f_right_h[i] - f_left_h[i]);
+					mu_bkg[i] = 0.5*slope*f_mid_h[i] + background;
                 		}	 
 			}
 
@@ -237,10 +240,10 @@ void MyModel::calculate_mu()
         // code taken from sherpa
         for (size_t ii = 0; ii < mu_h.size(); ii++ )
 		{
-			mu_hp_out[ ii ] =  exp(log(background) + mu_h[ ii ]);
+			mu_hp_out[ ii ] =  exp(log(mu_bkg[ ii ]) + mu_h[ ii ]);
 //			mu_hm_out[ ii ] =  (mu_hm[ ii ] + mu_h[ ii]);
 
-			mu_hp[ ii ] = exp(log(background) + mu_h[ ii ]);
+			mu_hp[ ii ] = exp(log(mu_bkg[ ii ]) + mu_h[ ii ]);
                         mu_hp[ ii ] *= pha_heg_p.arf.specresp[ ii ];
 
 			mu_hp_specresp[ ii ] = mu_hp_out[ ii ] * pha_heg_p.arf.specresp[ ii ]; 
@@ -276,11 +279,11 @@ void MyModel::calculate_mu()
 
 	for(size_t i=0; i<mu_h.size(); i++)
 	{
-//	        if(i == 0)
-//        	    	y_h[i] = noise_sigma*noise_normals_h[i];
-//       	 	else
-//            		y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
-//
+	        if(i == 0)
+        	    	y_h[i] = noise_sigma*noise_normals_h[i];
+       	 	else
+            		y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
+
 		mu_with_ou[i] = mu_hp[i];
 	        //mu_with_ou[i] = mu_hp[i] * exp(y_h[i]);
 
@@ -362,6 +365,7 @@ void MyModel::from_prior(RNG& rng)
     background = exp(background);
 
 
+    slope = -2.0 + 4.0 * rng.rand();
 //	do
 //	{
 //		inst_fac_hm = cauchy.generate(rng);
@@ -442,7 +446,7 @@ double MyModel::perturb(RNG& rng)
 	}
 	else
 	{
-		which = rng.rand_int(3);
+		which = rng.rand_int(4);
 		if(which == 0)
 		{
             		background = log(background);
@@ -451,6 +455,12 @@ double MyModel::perturb(RNG& rng)
                 		logH = -1E300;
             		background = exp(background);
 		}
+
+		else if(which == 1)
+			{
+                        slope += 4.*rng.randh();
+                        wrap(slope, -2., 2.);
+			}
 //                else if(which == 1)
 //                {
 //                        inst_fac_hm = log(inst_fac_hm);
@@ -479,7 +489,7 @@ double MyModel::perturb(RNG& rng)
 //                }
 //
 
-		else if(which == 1)
+		else if(which == 2)
 		{
                         noise_sigma = log(noise_sigma);
                         logH += cauchy.perturb(noise_sigma, rng);
@@ -570,7 +580,7 @@ void MyModel::print(std::ostream& out) const
 
 	out.precision(25);
 //        out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
-	out<<background<<' '<<noise_L<<' '<<noise_sigma<<' ';
+	out<<background<<' '<<slope<<' '<<noise_L<<' '<<noise_sigma<<' ';
 
         dopplershift.print(out);
 
