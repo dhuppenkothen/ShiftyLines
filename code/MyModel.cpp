@@ -14,8 +14,8 @@ const int& nlines = Data::get_instance().get_nlines();
 //const std::vector<double> line_pos = Data::get_instance().get_line_pos();
 const PHAData& pha_heg_p = Data::get_instance().get_pha_heg_p();
 const PHAData& pha_heg_m = Data::get_instance().get_pha_heg_m();
-const PHAData& pha_meg_p = Data::get_instance().get_pha_meg_p();
-const PHAData& pha_meg_m = Data::get_instance().get_pha_meg_m();
+//const PHAData& pha_meg_p = Data::get_instance().get_pha_meg_p();
+//const PHAData& pha_meg_m = Data::get_instance().get_pha_meg_m();
 
 // Initialise the static distribution
 const DNest4::Cauchy MyModel::cauchy(0.0, 1.0);
@@ -23,11 +23,11 @@ const DNest4::Cauchy MyModel::cauchy(0.0, 1.0);
 MyModel::MyModel()
 :dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
 ,noise_normals_h(pha_heg_p.bin_lo.size())
-,noise_normals_m(pha_meg_p.bin_lo.size())
+//,noise_normals_m(pha_meg_p.bin_lo.size())
 ,mu_hp(pha_heg_p.counts.size())
 ,mu_hm(pha_heg_m.counts.size())
-,mu_mp(pha_meg_p.counts.size())
-,mu_mm(pha_meg_m.counts.size())
+//,mu_mp(pha_meg_p.counts.size())
+//,mu_mm(pha_meg_m.counts.size())
 {
 }
 
@@ -81,7 +81,6 @@ void MyModel::rmf_fold(IndexType len_source, const ConstFloatType *source,
 //             ( UIndexType(*first_chan_tmp) < offset ) )
 //                //throw RMFConvolutionFailure();
 
-
         counts_tmp = counts + *first_chan_tmp - offset;
         current_num_chans = *num_chans_tmp;
         first_chan_tmp++;
@@ -93,7 +92,6 @@ void MyModel::rmf_fold(IndexType len_source, const ConstFloatType *source,
 //                throw RMFConvolutionFailure();
 
         while ( current_num_chans ) {
-
           *counts_tmp += *resp_tmp * source_bin_ii;
           counts_tmp++;
           resp_tmp++;
@@ -126,22 +124,25 @@ void MyModel::calculate_mu()
 
 	const vector<double>& f_left_h = pha_heg_p.bin_lo;
 	const vector<double>& f_right_h = pha_heg_p.bin_hi;
-        const vector<double>& f_left_m = pha_meg_p.bin_lo;
-        const vector<double>& f_right_m = pha_meg_p.bin_hi;
+	const vector<double>& f_mid_h = pha_heg_p.bin_mid;
+		
+//        const vector<double>& f_left_m = pha_meg_p.bin_lo;
+//        const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
-	// assign constant background to model
-	mu_hp.assign(mu_hp.size(), background);
-        mu_hm.assign(mu_hm.size(), background); 
-        mu_mp.assign(mu_mp.size(), background);
-        mu_mm.assign(mu_mm.size(), background);
+	const string& eunit = pha_heg_p.bin_lo_unit;
+
+	// assign constant background to mode
+	mu_hp.assign(mu_hp.size(), 0.0);
+        mu_hm.assign(mu_hm.size(), 0.0); 
+//        mu_mp.assign(mu_mp.size(), 0.0);
+//        mu_mm.assign(mu_mm.size(), 0.0);
 
 	mu_h.assign(mu_hp.size(), 0.0); // array 
-        mu_m.assign(mu_mp.size(), 0.0); // array 
+//        mu_m.assign(mu_mp.size(), 0.0); // array 
+	mu_bkg.assign(mu_hp.size(), 0.0);
 
-        mu_hp_out.assign(mu_hp.size(), 0.0);
-        mu_hm_out.assign(mu_hm.size(), 0.0);
-        mu_mp_out.assign(mu_mp.size(), 0.0);
-        mu_mm_out.assign(mu_mm.size(), 0.0);
+//        mu_mp_out.assign(mu_mp.size(), 0.0);
+//        mu_mm_out.assign(mu_mm.size(), 0.0);
 
 
 	// get amplitudes and widths from the RJObject 
@@ -153,7 +154,6 @@ void MyModel::calculate_mu()
 //        // I'm only interested in a specific region of the spectrum
 //        // right now, so let's only look at that!
 	const double& f_min = data.get_f_min();
-//        const double& f_max = data.get_f_max();
 	const double f_max = data.get_f_max();
 
         for(size_t j=0; j<dopplershiftcomponents.size(); j++)
@@ -163,7 +163,12 @@ void MyModel::calculate_mu()
 	
 			for (int i=0; i<nlines; i++)
 				{
-					line_pos_shifted[i] = line_pos[i]*(1. + dshift);
+					if (eunit == "keV")
+						{
+						line_pos_shifted[i] = line_pos[i]*(1.0/(1. + dshift));
+						}
+					if (eunit == "angstrom")
+						line_pos_shifted[i] = line_pos[i]*(1. + dshift);
 					amplitude[i] = exp(dopplershiftcomponents[j][i+1]);
 					//logq[i] = dopplershiftcomponents[j][i+1+nlines];
       					sign[i] = dopplershiftcomponents[j][i+1+2*nlines];		
@@ -173,6 +178,10 @@ void MyModel::calculate_mu()
 			int sh=0;	
         	        for(size_t i=0; i<mu_h.size(); i++)
         	        {
+                                mu_bkg[i] = exp(slope*log(f_mid_h[i]) + log(background));
+
+
+
 		                if (f_left_h[i] < f_min)                        
 		                       continue;
 		                if (f_right_h[i] > f_max)
@@ -192,72 +201,78 @@ void MyModel::calculate_mu()
 						   (std::abs(f_left_h[i] - line_pos_shifted[k]) < 5.*width[k])) 
 							mu_h[i] += sh*amplitude[k]*(gaussian_cdf(f_right_h[i], line_pos_shifted[k], width[k])
 										- gaussian_cdf(f_left_h[i], line_pos_shifted[k], width[k]));
-						}
+					}
                 		}	 
 			}
 
-                        int sm=0;
-                        for(size_t i=0; i<mu_m.size(); i++)
-                        {
-                                if (f_left_m[i] < f_min)
-                                       continue;
-                                if (f_right_m[i] > f_max)
-                                       continue;
-                                else
-                                {
-
-
-                                        for (int k=0; k<nlines; k++)
-                                                {
-                                                // Integral over the Lorentzian distribution
-                                                if (sign[k] < dopplershift.get_conditional_prior().get_pp())
-                                                        sm = -1;
-                                                else
-                                                        sm = 1;
-                                                if ((std::abs(f_right_m[i] - line_pos_shifted[k]) < 5.*width[k]) &&
-                                                   (std::abs(f_left_m[i] - line_pos_shifted[k]) < 5.*width[k]))
-                                                        mu_m[i] += sm*amplitude[k]*(gaussian_cdf(f_right_m[i], line_pos_shifted[k], width[k])
-                                                                                - gaussian_cdf(f_left_m[i], line_pos_shifted[k], width[k]));
-                                                }
-                                }
-                        }
-
+//                        int sm=0;
+//                        for(size_t i=0; i<mu_m.size(); i++)
+//                        {
+//                                if (f_left_m[i] < f_min)
+//                                       continue;
+//                                if (f_right_m[i] > f_max)
+//                                       continue;
+//                                else
+//                                {
+//
+//
+//                                        for (int k=0; k<nlines; k++)
+//                                                {
+//                                                // Integral over the Lorentzian distribution
+//                                                if (sign[k] < dopplershift.get_conditional_prior().get_pp())
+//                                                        sm = -1;
+//                                                else
+//                                                        sm = 1;
+//                                                if ((std::abs(f_right_m[i] - line_pos_shifted[k]) < 5.*width[k]) &&
+//                                                   (std::abs(f_left_m[i] - line_pos_shifted[k]) < 5.*width[k]))
+//                                                        mu_m[i] += sm*amplitude[k]*(gaussian_cdf(f_right_m[i], line_pos_shifted[k], width[k])
+//                                                                                - gaussian_cdf(f_left_m[i], line_pos_shifted[k], width[k]));
+//                                                }
+//                                }
+//                        }
+//
 	}
-
+//
+//
    
         // fold through the ARF
         // code taken from sherpa
         for (size_t ii = 0; ii < mu_h.size(); ii++ )
 		{
-			mu_hp_out[ ii ] =  (mu_hp[ ii ] + mu_h[ ii ]);
-			mu_hm_out[ ii ] = inst_fac_hm * (mu_hm[ ii ] + mu_h[ ii]);
 
-			mu_hp[ ii ] = mu_hp_out[ ii ] * pha_heg_p.arf.specresp[ ii ];
-            		mu_hm[ ii ] = mu_hm_out[ ii ] * pha_heg_m.arf.specresp[ ii ];
+			mu_hp[ ii ] = exp(log(mu_bkg[ ii ]) + mu_h[ ii ]);
+                        mu_hp[ ii ] *= pha_heg_p.arf.specresp[ ii ];
+
+                        mu_hm[ ii ] = exp(log(mu_bkg[ ii ]) + mu_h[ ii ]);
+                        mu_hm[ ii ] *= pha_heg_m.arf.specresp[ ii ];
+
 
 		}
  
-        for (size_t ii = 0; ii < mu_m.size(); ii++ )
-                {
-			mu_mp_out[ ii ] =  inst_fac_mp * (mu_mp[ ii ] + mu_m[ ii ]);
-			mu_mm_out[ ii ] = inst_fac_mm * (mu_mm[ ii ] + mu_m[ ii]);
-
-                        mu_mp[ ii ] = mu_mp_out[ ii ] * pha_meg_p.arf.specresp[ ii ];
-                        mu_mm[ ii ] = mu_mm_out[ ii ] * pha_meg_m.arf.specresp[ ii ];
-
-                }
-
+//        for (size_t ii = 0; ii < mu_m.size(); ii++ )
+//                {
+//			mu_mp_out[ ii ] = exp(log(background) + mu_m[ ii ]);
+//			mu_mm_out[ ii ] = exp(log(background) + mu_m[ ii]);
+//
+//                        mu_mp[ ii ] = mu_mp_out[ ii ] * pha_meg_p.arf.specresp[ ii ];
+//                        mu_mm[ ii ] = mu_mm_out[ ii ] * pha_meg_m.arf.specresp[ ii ];
+//
+//                }
+//
 
 
         // Compute the OU process
-        vector<double> y_h(mu_h.size());
+        //vector<double> y_h(mu_h.size());
         double alpha = exp(-1./noise_L);
 
-        vector<double> y_m(mu_m.size());
+        //vector<double> y_m(mu_m.size());
 
+        y_h.assign(mu_hp.size(), 0.0);
+//        y_m.assign(mu_hm.size(), 0.0);
 
 	// noise process could come both from the source or the detector!
  	// which is why I put it in between the ARF and the RMF
+
 	for(size_t i=0; i<mu_h.size(); i++)
 	{
 	        if(i == 0)
@@ -265,17 +280,9 @@ void MyModel::calculate_mu()
        	 	else
             		y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
 
-//		if (f_left_h[i] < f_min)
-//			y_h[i]=0.0;
-//		else if (f_right_h[i] > f_max)
-//             		y_h[i]=0.0;
-
-//	        else if((f_left_h[i] < f_min) && (f_right_h[i] > f_min ))
-//	                y_h[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_h[i];
-//	        else
-//	                y_h[i] = alpha*y_h[i-1] + noise_sigma*noise_normals_h[i];
 	        mu_hp[i] *= exp(y_h[i]);
-		mu_hm[i] *= exp(y_h[i]);
+		mu_hm[i] *= (inst_fac_hm * exp(y_h[i]));
+
 
 	}
 
@@ -284,30 +291,22 @@ void MyModel::calculate_mu()
 
         // noise process could come both from the source or the detector!
         // which is why I put it in between the ARF and the RMF
-        for(size_t i=0; i<mu_m.size(); i++)
-        {
-                if(i == 0)
-                        y_m[i] = noise_sigma*noise_normals_m[i];
-                else
-                        y_m[i] = alpha*y_m[i-1] + noise_sigma*noise_normals_m[i];
-
-
-//                if (f_left_m[i] < f_min)
-//                        y_m[i]=1.0;
-//                else if (f_right_m[i] > f_max)
-//                        y_m[i]=1.0;
-//
-//                else if((f_left_m[i] < f_min) && (f_right_m[i] > f_min ))
-//                        y_m[i] = noise_sigma/sqrt(1. - alpha*alpha)*noise_normals_m[i];
+//        for(size_t i=0; i<mu_m.size(); i++)
+//        {
+//                if(i == 0)
+//                        y_m[i] = noise_sigma*noise_normals_m[i];
 //                else
 //                        y_m[i] = alpha*y_m[i-1] + noise_sigma*noise_normals_m[i];
-                mu_mp[i] *= exp(y_m[i]);
-                mu_mm[i] *= exp(y_m[i]);
 
-        }
+//                mu_mp[i] *= (inst_fac_mp * exp(y_m[i]));
+ //               mu_mm[i] *= (inst_fac_mm * exp(y_m[i]));
+ //               mu_mp_out[ i ] *= exp(y_m[ i ]);
+ //               mu_mm_out[ i ] *= exp(y_m[ i ]);
 
-        counts_mp.assign(mu_mp.size(), 0.0);
-        counts_mm.assign(mu_mm.size(), 0.0);
+//        }
+
+//        counts_mp.assign(mu_mp.size(), 0.0);
+//        counts_mm.assign(mu_mm.size(), 0.0);
 
         rmf_fold(mu_hp.size(), &mu_hp[0], 
 	  pha_heg_p.rmf.n_grp.size(), &pha_heg_p.rmf.n_grp[0],
@@ -325,39 +324,40 @@ void MyModel::calculate_mu()
           counts_hm.size(), &counts_hm[0],
           pha_heg_m.rmf.offset);
 
-        rmf_fold(mu_mp.size(), &mu_mp[0],
-          pha_meg_p.rmf.n_grp.size(), &pha_meg_p.rmf.n_grp[0],
-          pha_meg_p.rmf.f_chan.size(), &pha_meg_p.rmf.f_chan[0],
-          pha_meg_p.rmf.n_chan.size(), &pha_meg_p.rmf.n_chan[0],
-          pha_meg_p.rmf.matrix.size(), &pha_meg_p.rmf.matrix[0],
-          counts_mp.size(), &counts_mp[0],
-          pha_meg_p.rmf.offset);
-
-        rmf_fold(mu_mm.size(), &mu_mm[0],
-          pha_meg_m.rmf.n_grp.size(), &pha_meg_m.rmf.n_grp[0],
-          pha_meg_m.rmf.f_chan.size(), &pha_meg_m.rmf.f_chan[0],
-          pha_meg_m.rmf.n_chan.size(), &pha_meg_m.rmf.n_chan[0],
-          pha_meg_m.rmf.matrix.size(), &pha_meg_m.rmf.matrix[0],
-          counts_mm.size(), &counts_mm[0],
-          pha_meg_m.rmf.offset);
-
+//        rmf_fold(mu_mp.size(), &mu_mp[0],
+//          pha_meg_p.rmf.n_grp.size(), &pha_meg_p.rmf.n_grp[0],
+//          pha_meg_p.rmf.f_chan.size(), &pha_meg_p.rmf.f_chan[0],
+//          pha_meg_p.rmf.n_chan.size(), &pha_meg_p.rmf.n_chan[0],
+//          pha_meg_p.rmf.matrix.size(), &pha_meg_p.rmf.matrix[0],
+//          counts_mp.size(), &counts_mp[0],
+//          pha_meg_p.rmf.offset);
+//
+//        rmf_fold(mu_mm.size(), &mu_mm[0],
+//          pha_meg_m.rmf.n_grp.size(), &pha_meg_m.rmf.n_grp[0],
+//          pha_meg_m.rmf.f_chan.size(), &pha_meg_m.rmf.f_chan[0],
+//          pha_meg_m.rmf.n_chan.size(), &pha_meg_m.rmf.n_chan[0],
+//          pha_meg_m.rmf.matrix.size(), &pha_meg_m.rmf.matrix[0],
+//          counts_mm.size(), &counts_mm[0],
+//          pha_meg_m.rmf.offset);
+//
         counts_hp.resize(data.get_pha_heg_p().bin_lo.size());
         counts_hm.resize(data.get_pha_heg_m().bin_lo.size());
 
-	counts_mp.resize(data.get_pha_meg_p().bin_lo.size());
-        counts_mm.resize(data.get_pha_meg_m().bin_lo.size());
-
+//	counts_mp.resize(data.get_pha_meg_p().bin_lo.size());
+//        counts_mm.resize(data.get_pha_meg_m().bin_lo.size());
+//
 }
 
 void MyModel::from_prior(RNG& rng)
 {
-    do
-    {
-    	background = cauchy.generate(rng);
-    }while(std::abs(background) > 25.0);
-    background = exp(background);
+   	 do
+    	{
+    		background = cauchy.generate(rng);
+    	}while(std::abs(background) > 25.0);
+    	background = exp(background);
 
-
+   	slope = -2.0 + 4.0 * rng.rand();
+	
 	do
 	{
 		inst_fac_hm = cauchy.generate(rng);
@@ -365,27 +365,17 @@ void MyModel::from_prior(RNG& rng)
     	inst_fac_hm = exp(inst_fac_hm);
 
 
-        do
-        {
-                inst_fac_mp = cauchy.generate(rng);
-        }while(std::abs(inst_fac_mp) > 25.0);
-        inst_fac_mp = exp(inst_fac_mp);
-
-        do
-        {
-                inst_fac_mm = cauchy.generate(rng);
-        }while(std::abs(inst_fac_mm) > 25.0);
-        inst_fac_mm = exp(inst_fac_mm);
-
-//        inst_fac_hm = tan(M_PI*(0.97*rng.rand() - 0.485));
-//        inst_fac_hm = exp(inst_fac_hm);
-//
-//        inst_fac_mp = tan(M_PI*(0.97*rng.rand() - 0.485));
+//        do
+//        {
+//                inst_fac_mp = cauchy.generate(rng);
+//        }while(std::abs(inst_fac_mp) > 25.0);
 //        inst_fac_mp = exp(inst_fac_mp);
 //
-//        inst_fac_mm = tan(M_PI*(0.97*rng.rand() - 0.485));
+//        do
+//        {
+//                inst_fac_mm = cauchy.generate(rng);
+//        }while(std::abs(inst_fac_mm) > 25.0);
 //        inst_fac_mm = exp(inst_fac_mm);
-//
 
 	dopplershift.from_prior(rng);
 
@@ -420,10 +410,10 @@ double MyModel::perturb(RNG& rng)
 				noise_normals_h[i] += rng.randh();
 				logH += -0.5*pow(noise_normals_h[i], 2);
 
-                                i = rng.rand_int(noise_normals_m.size());
-                                logH -= -0.5*pow(noise_normals_m[i], 2);
-                                noise_normals_m[i] += rng.randh();
-                                logH += -0.5*pow(noise_normals_m[i], 2);
+ //                               i = rng.rand_int(noise_normals_m.size());
+ //                               logH -= -0.5*pow(noise_normals_m[i], 2);
+ //                               noise_normals_m[i] += rng.randh();
+ //                               logH += -0.5*pow(noise_normals_m[i], 2);
 
 
 
@@ -437,18 +427,18 @@ double MyModel::perturb(RNG& rng)
                     noise_normals_h[k] = rng.randn();
                 }
 
-                reps = (int)pow(noise_normals_m.size(), rng.rand());
-                for(int i=0; i<reps; ++i)
-                {
-                    int k = rng.rand_int(noise_normals_m.size());
-                    noise_normals_m[k] = rng.randn();
-                }
+//                reps = (int)pow(noise_normals_m.size(), rng.rand());
+//                for(int i=0; i<reps; ++i)
+//                {
+//                    int k = rng.rand_int(noise_normals_m.size());
+//                    noise_normals_m[k] = rng.randn();
+//                }
 			}
 		}
 	}
 	else
 	{
-		which = rng.rand_int(6);
+		which = rng.rand_int(5);
 		if(which == 0)
 		{
             		background = log(background);
@@ -457,52 +447,41 @@ double MyModel::perturb(RNG& rng)
                 		logH = -1E300;
             		background = exp(background);
 		}
-                else if(which == 1)
+
+		else if(which == 1)
+			{
+                        slope += 4.*rng.randh();
+                        wrap(slope, -2., 2.);
+			}
+                else if(which == 2)
                 {
                         inst_fac_hm = log(inst_fac_hm);
-//                        inst_fac_hm = (atan(inst_fac_hm)/M_PI + 0.485)/0.97;
-//                        inst_fac_hm += rng.randh();
-//                        inst_fac_hm = mod(inst_fac_hm, 1.);
-//                        inst_fac_hm = tan(M_PI*(0.97*inst_fac_hm - 0.485));
-//                        inst_fac_hm = exp(inst_fac_hm);
                         logH += cauchy.perturb(inst_fac_hm, rng);
                         if(std::abs(inst_fac_hm) > 25.0)
                                 logH = -1E300;
 			inst_fac_hm = exp(inst_fac_hm);
                 }
 
-                else if(which == 2)
-                {
-			inst_fac_mp = log(inst_fac_mp);
-                        logH += cauchy.perturb(inst_fac_mp, rng);
-                        if(std::abs(inst_fac_mp) > 25.0)
-                                logH = -1E300;
-			inst_fac_mp = exp(inst_fac_mp);
-//                        inst_fac_mp = log(inst_fac_mp);
-//                        inst_fac_mp = (atan(inst_fac_mp)/M_PI + 0.485)/0.97;
-//                        inst_fac_mp += rng.randh();
-//                        inst_fac_mp = mod(inst_fac_mp, 1.);
-//                        inst_fac_mp = tan(M_PI*(0.97*inst_fac_mp - 0.485));
-//                        inst_fac_mp = exp(inst_fac_mp);
-                }
+//                else if(which == 2)
+//                {
+//			inst_fac_mp = log(inst_fac_mp);
+//                        logH += cauchy.perturb(inst_fac_mp, rng);
+//                        if(std::abs(inst_fac_mp) > 25.0)
+//                                logH = -1E300;
+//			inst_fac_mp = exp(inst_fac_mp);
+//                }
+//
+//                else if(which == 3)
+//                {
+//			inst_fac_mm = log(inst_fac_mm);
+//                        logH += cauchy.perturb(inst_fac_mm, rng);
+//                        if(std::abs(inst_fac_mm) > 25.0)
+//                                logH = -1E300;
+//			inst_fac_mm = exp(inst_fac_mm);
+//                }
+//
 
-                else if(which == 3)
-                {
-			inst_fac_mm = log(inst_fac_mm);
-                        logH += cauchy.perturb(inst_fac_mm, rng);
-                        if(std::abs(inst_fac_mm) > 25.0)
-                                logH = -1E300;
-			inst_fac_mm = exp(inst_fac_mm);
-//                        inst_fac_mm = log(inst_fac_mm);
-//                        inst_fac_mm = (atan(inst_fac_mm)/M_PI + 0.485)/0.97;
-//                        inst_fac_mm += rng.randh();
-//                        inst_fac_mm = mod(inst_fac_mm, 1.);
-//                        inst_fac_mm = tan(M_PI*(0.97*inst_fac_mm - 0.485));
-//                        inst_fac_mm = exp(inst_fac_mm);
-                }
-
-
-		else if(which == 4)
+		else if(which == 3)
 		{
                         noise_sigma = log(noise_sigma);
                         logH += cauchy.perturb(noise_sigma, rng);
@@ -526,14 +505,12 @@ double MyModel::perturb(RNG& rng)
 
 double MyModel::log_likelihood() const
 {
-        const vector<double>& f_mid_old = data.get_f_mid();
 
-//        const vector<double>& y = data.get_y();
-//	const vector<double>& yerr = data.get_yerr();
+
 	const PHAData& pha_heg_p = data.get_pha_heg_p();
         const PHAData& pha_heg_m = data.get_pha_heg_m();
-        const PHAData& pha_meg_p = data.get_pha_meg_p();
-        const PHAData& pha_meg_m = data.get_pha_meg_m();
+//        const PHAData& pha_meg_p = data.get_pha_meg_p();
+//        const PHAData& pha_meg_m = data.get_pha_meg_m();
 
 
 	const vector<double>& y_hp = pha_heg_p.counts;
@@ -541,10 +518,10 @@ double MyModel::log_likelihood() const
 	const vector<double>& f_left_h = pha_heg_p.bin_lo;
         const vector<double>& f_right_h = pha_heg_p.bin_hi;
 
-        const vector<double>& y_mp = pha_meg_p.counts;
-        const vector<double>& y_mm = pha_meg_m.counts;
-        const vector<double>& f_left_m = pha_meg_p.bin_lo;
-        const vector<double>& f_right_m = pha_meg_p.bin_hi;
+//        const vector<double>& y_mp = pha_meg_p.counts;
+//        const vector<double>& y_mm = pha_meg_m.counts;
+//        const vector<double>& f_left_m = pha_meg_p.bin_lo;
+//        const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
 	// I'm only interested in a specific region of the spectrum
 	// right now, so let's only look at that!
@@ -569,29 +546,34 @@ double MyModel::log_likelihood() const
 				}
  		}
 
-        double logl_mp = 0.;
-        double logl_mm = 0.;
-            for(size_t i=0; i<y_mp.size(); i++)
-                {
-                        if (f_left_m[i] < f_min)
-                                continue;
-                        if (f_right_m[i] > f_max)
-                                continue;
-                        else
-                                {
-                                        logl_mp += -counts_mp[i] + y_mp[i]*log(counts_mp[i]) - gsl_sf_lngamma(y_mp[i] + 1.);
-                                        logl_mm += -counts_mm[i] + y_mm[i]*log(counts_mm[i]) - gsl_sf_lngamma(y_mm[i] + 1.);
-                                }
-                }
+//        double logl_mp = 0.;
+//        double logl_mm = 0.;
+//            for(size_t i=0; i<y_mp.size(); i++)
+//                {
+//                        if (f_left_m[i] < f_min)
+//                                continue;
+//                        if (f_right_m[i] > f_max)
+//                                continue;
+//                        else
+//                                {
+//                                        logl_mp += -counts_mp[i] + y_mp[i]*log(counts_mp[i]) - gsl_sf_lngamma(y_mp[i] + 1.);
+//                                        logl_mm += -counts_mm[i] + y_mm[i]*log(counts_mm[i]) - gsl_sf_lngamma(y_mm[i] + 1.);
+//                                }
+//                }
+//
 
 
-
-	return logl_hp + logl_hm + logl_mp + logl_mm;
+	return logl_hp + logl_hm;
+//	return logl_hp + logl_hm + logl_mp + logl_mm;
 }
 
 void MyModel::print(std::ostream& out) const
 {
-        out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
+
+	out.precision(25);
+//        out<<background<<' '<<inst_fac_hm<<' '<<inst_fac_mp<<' '<<inst_fac_mm<<' '<<noise_L<<' '<<noise_sigma<<' ';
+	out<<background<<' '<<slope<<' '<<noise_L<<' '<<noise_sigma<<' '<<inst_fac_hm<<' ';
+
         dopplershift.print(out);
 
         const double& f_min = data.get_f_min();
@@ -599,50 +581,8 @@ void MyModel::print(std::ostream& out) const
         const vector<double>& f_left_h = pha_heg_p.bin_lo;
         const vector<double>& f_right_h = pha_heg_p.bin_hi;
 
-        const vector<double>& f_left_m = pha_meg_p.bin_lo;
-        const vector<double>& f_right_m = pha_meg_p.bin_hi;
-
-
-        for(size_t i=0; i<mu_hp_out.size(); i++)
-                {
-                        if (f_left_h[i] < f_min)
-                                continue;
-                        if (f_right_h[i] > f_max)
-                                continue;
-                        else
-                                out<<mu_hp_out[i]<<' ';
-                }
-
-        for(size_t i=0; i<mu_hm_out.size(); i++)
-                {
-                        if (f_left_h[i] < f_min)
-                                continue;
-                        if (f_right_h[i] > f_max)
-                                continue;
-                        else
-                                out<<mu_hm_out[i]<<' ';
-                }
-
-        for(size_t i=0; i<mu_mp_out.size(); i++)
-                {
-                        if (f_left_m[i] < f_min)
-                                continue;
-                        if (f_right_m[i] > f_max)
-                                continue;
-                        else
-                                out<<mu_mp_out[i]<<' ';
-                }
-
-        for(size_t i=0; i<mu_mm_out.size(); i++)
-                {
-                        if (f_left_m[i] < f_min)
-                                continue;
-                        if (f_right_m[i] > f_max)
-                                continue;
-                        else
-                                out<<mu_mm_out[i]<<' ';
-                }
-
+//        const vector<double>& f_left_m = pha_meg_p.bin_lo;
+//        const vector<double>& f_right_m = pha_meg_p.bin_hi;
 
 	for(size_t i=0; i<counts_hp.size(); i++)
         	{
@@ -664,25 +604,25 @@ void MyModel::print(std::ostream& out) const
 		                out<<counts_hm[i]<<' ';
 		}
 
-        for(size_t i=0; i<counts_mp.size(); i++)
-		{
-                        if (f_left_m[i] < f_min)
-                                continue;
-                        if (f_right_m[i] > f_max)
-                                continue;
-                        else
-		                out<<counts_mp[i]<<' ';
- 		}
-
-        for(size_t i=0; i<counts_mm.size(); i++)
-		{
-                        if (f_left_m[i] < f_min)
-                                continue;
-                        if (f_right_m[i] > f_max)
-                                continue;
-                        else
-		                out<<counts_mm[i]<<' ';  
-		}
+//        for(size_t i=0; i<counts_mp.size(); i++)
+//		{
+//                        if (f_left_m[i] < f_min)
+//                                continue;
+//                        if (f_right_m[i] > f_max)
+//                                continue;
+//                        else
+//		                out<<counts_mp[i]<<' ';
+// 		}
+//
+//        for(size_t i=0; i<counts_mm.size(); i++)
+//		{
+//                        if (f_left_m[i] < f_min)
+//                                continue;
+//                        if (f_right_m[i] > f_max)
+//                                continue;
+//                        else
+//		                out<<counts_mm[i]<<' ';  
+//		}
 }
 
 string MyModel::description() const
