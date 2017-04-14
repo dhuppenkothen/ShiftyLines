@@ -46,7 +46,8 @@ class MyModel
 		std::vector<double> mu_h;
  		std::vector<double> mu_m;
 
-		std::vector<double> mu_bkg;
+		std::vector<double> mu_h_bkg;
+                std::vector<double> mu_m_bkg;
 
 		std::vector<double> mu_hp;
 		std::vector<double> mu_hm;
