@@ -1,3 +1,38 @@
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyc
+code/*.pyc
+
 __pycache__
 sample.txt
 levels.txt
@@ -15,4 +50,12 @@ data/8525_nodip_cut.txt
 demos/.ipynb_checkpoints/
 code/Frames/*.png
 code/Frames/movie.avi
-
+data/
+code/*.swn
+code/*.swo
+code/*.swp
+*.swp
+paper/shiftylines_paperNotes.bib
+demos/Scratch.ipynb
+demos/test_extended_shift2.txt
+demos/test_extended_shift2_data.pkl

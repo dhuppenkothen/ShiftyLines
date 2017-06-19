@@ -115,6 +115,9 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 	
 			if(the_sign < 0.0 || the_sign > 1.)
 				return -1E300;	
+
+			//if(exp(loga) > background)
+			//	return -1E300;
 		
 			logprior += -log(2.*sigma_loga) - std::abs(loga - mu_loga)/sigma_loga;
 			logprior += -log(2.*sigma_logwidth) - std::abs(logwidth - mu_logwidth)/sigma_logwidth;

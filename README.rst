@@ -11,6 +11,8 @@ Uses DNest4 and RJObject for reversible-jump MCMC.
 Prerequisites
 -------------
 * gcc
+* `cfitsio <http://heasarc.gsfc.nasa.gov/docs/software/fitsio/fitsio.html>`_
+* `CCFits <http://heasarc.gsfc.nasa.gov/docs/software/fitsio/ccfits/index.html>`_
 * python3
 * numpy
 * `DNest4 <https://github.com/eggplantbren/DNest4>`_
@@ -39,7 +41,8 @@ something similar.
 Copyright
 ---------
 
-All content © 2016 the authors. The code is distributed under the MIT license.
+All content © 2016 the authors. The code is distributed under the
+GNU General Public license, version 3.
 
 Pull requests are welcome! If you are interested in the further development of
 this project, please `get in touch via the issues
