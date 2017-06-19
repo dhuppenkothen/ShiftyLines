@@ -19,6 +19,7 @@
 \usepackage{threeparttable}
 \usepackage{tabularx}
 \usepackage{subfigure}
+\DeclareMathOperator\erf{erf}
 
 
 %\usepackage{longtable}%\usepackage[stable]{footmisc}
@@ -30,6 +31,7 @@
 \newcommand{\rxte}{\project{RXTE}}
 \newcommand{\chandra}{\project{Chandra}}
 \newcommand{\athena}{\project{Athena+}}
+\newcommand{\xmm}{\project{XMM-Newton}}
 \newcommand{\given}{\,|\,}
 \newcommand{\dd}{\mathrm{d}}
 \newcommand{\counts}{y}
@@ -41,13 +43,13 @@
 \newcommand{\bkg}{\mathrm{bkg}}
 \newcommand{\word}{\phi}
 
-\DeclareMathOperator\erf{erf}
+%\usepackage{breqn}
 
 %\newcommand{\bs}{\boldsymbol}
 
 \begin{document}
 
-\title{Shifty Lines: Probabilistic inference of multiple redshifts from a spectrum}
+\title{Probabilistic inference of multiple Doppler shifts from High-Resolution X-ray Spectroscopy}
 
 \author{D. Huppenkothen\altaffilmark{1, 2}, B. J. Brewer\altaffilmark{3}, Victoria Grinberg\altaffilmark{4}}
  
@@ -62,14 +64,21 @@ MIT, 70 Vassar Street, Cambridge, MA 02139, USA}
 Stellar winds and winds from accretion disks have Doppler shifts. Sometimes, there can be more than one Doppler shift in 
 the same X-ray spectrum. This project solves the problem where (a) we do not know the line amplitudes and widths, (b) the 
 number of Doppler shifts in the system and (c) which line belongs to which Doppler shift.
-
 \end{abstract}
 
 \keywords{methods:statistics}
 
 \section{Introduction}
 
-Accretion disks and winds and stuff.
+%Accretion disks and winds and stuff.
+
+Spectroscopy of the light observed from astronomical objects is one of the primary ways to study the composition, thermal state and dynamics of the gas and plasma that produced the emission. Hot plasmas produce X-ray emission lines of heavy elements, often used to study for example supernova remnants. The Fe K$\alpha$ fluorescence line at $6.4 \, \mathrm{keV}$ holds a special position in high-energy astrophysics are being a key diagnostic for the dynamics of black hole systems. The hard X-ray emission from some X-ray sources is absorbed by circumstellar as well as interstellar and -galactic media, producing absorption lines that act as key tracers for the elements and ionization states of these media. 
+
+With the advent of high-resolution X-ray spectrometers such as the \chandra\ High-Energy Transmission Grating (HETG) and the \xmm\ Reflection Grating Spectrometer (RGS), it has become possible to study these systems in increasing detail. In the black hole X-ray binary V404 Cygni, spectra taken with the \chandra\ HETG revealed strong P Cygni profiles indicating the presence of a strong disk wind. Recently, high-resolution spectroscopy of the high-mass X-ray binary Cygnus X-1 revealed a time-dependence of spectral lines corresponding to the low ionization states of several heavy elements \citep{hirsch_inprep}. The occurrence of these states during dips in the total brightness led to the hypothesis that the stellar wind emitted by the black hole's O-star companion is clumpy. The absorption features observed are produced when hard X-ray emission from the accretion flow encounters these clumps, whose interior is at a lower temperature and ionization state than the surrounding gas. As of now, only a qualitative description of the clumpy stellar wind and its effect on the observed X-ray spectrum exists. A more quantitative description is hampered by two major problems: the identification of the lines in the spectrum, and how the observed lines are related to the material's ionization state. 
+
+The identification of the lines has two key components: first, a statistical procedure must decide whether there is a feature at a given wavelength at all. Once that feature is confirmed to some statistical significance, it must be identified with a corresponding line transition and element. In a stellar wind in particular, the latter part is complicated by the fact that the material is moving, and thus any lines observed will be at a certain Doppler shift. Identification of the lines with a physical model of the medium and its temperature is very time consuming and complex: current simulations of the full medium can require several minutes for a single simulation step, and thus are rarely feasible for involved analyses. As a result, most commonly spectral lines are identified by hand. Usually, this will include some kind of fitting of a Gaussian or Lorentzian line profile where a feature is evident in the spectrum. The presence of the line will then be confirmed using some kind of hypothesis test, and the fitted centroid frequency used to identify the line with a transition. 
+
+This procedure, while fairly general, has several shortcomings. Most severely, it does not make sufficient use of all the information we have. If we identify a transition belonging to a certain element at a particular Doppler shift, it is more probably to observe other transitions of the same element at that Doppler shift. A procedure that uses the structure of the problem in this way can capitalize on significantly more information in the data than is currently being used, and thus allow for more precise inferences even when using weaker lines. This paper presents an approach to this problem using Bayesian hierarchical models, a flexible way to design statistical models that allows for nearly arbitrary information about the problem's structure to be included in the model. The model we build in Section \ref{sec:method} allows for the presence of multiple Doppler-shifted media producing a spectrum that is a linear combination of the emission and absorption features of each medium. In its simplest form here, it only takes into account that several absorption lines could be Doppler-shifted in similar ways. In principle, however, the same model could easily be extended to include more complex knowledge about the underlying nuclear physics, for example when the presence of certain features automatically disallows certain other line transitions. This, however, is future work beyond the scope of this paper, since it requires detailed knowledge about the nuclear physics currently not available. 
 
 There are other astrophysical problems where similar questions arise. For
 example, many galaxy-galaxy strong gravitational lens systems were
@@ -83,10 +92,11 @@ paper. However, we focus more on the issue of characterizing all of the
 uncertainties (i.e. exploring the range of hypotheses plausible given the
 spectral data), rather than prioritizing computational speed.
 
-This is also especially important in light of future missions such as \textit{Athena+}, which 
-will supply spectroscopic data with unprecedented resolution and sensitivity.
+This work is particularly relevant in the context of future missions such as \athena, which will supply spectroscopic data with unprecedented resolution and sensitivity, and will thus allow us to study X-ray emitting and absorbing systems with a level of detail never possible before.
+
 
 \section{Method}
+\label{sec:method}
 
 \subsection{The Spectral Model}
 \label{sec:spectralmodel}
@@ -99,11 +109,11 @@ At the moment, for any Doppler shift $z_k = v_i/c$, all lines can be present. In
 Each line $(i,k), \, i \in \{0, ..., N\}$ for a Doppler shift $z_k \in \{z_0, ..., z_K\}$ is modelled as a Gaussian with location and scale parameters $\mu_{i,k}$ and $\sigma_{i,k}$ as well as an amplitude $A_{i,k}$, respectively. Note that $A_{i,k}$ is defined as the integrated flux (or counts, depending on the units of the data) over the line. We compute the line flux in each wavelength bin $j$ by integrating the model flux $\mean_j$ within the bin from the lower edge $\lambda_{j, \mathrm{low}}$ to the upper bin edge $\lambda_{j, \mathrm{high}}$:
 
 \begin{eqnarray}
-\mean_{\mathrm{lines},j} & = &  \sum_{k=1}^{K}\sum_{i=1}^{N}{\int^{\lambda_{j,\mathrm{high}}}_{\lambda_{j, \mathrm{low}}}{\frac{A_{i,k}}{\sigma_{i,k}\sqrt{2\pi}} \exp{(-(\lambda-\mu_{i,k})^2/{2\sigma_{i,k}^2})}}} \\ \nonumber
-& = & \frac{1}{2}  \sum_{k=1}^{K} \sum_{i=1}^{N} A_{i,k}  \left[ \erf{\left( \frac{\lambda_{j,\mathrm{high}} - \mu_{i,k}}{\sigma_{i,k}\sqrt{2}}\right)} - \erf{\left( \frac{\lambda_{j, \mathrm{low}} - \mu_{i,k}}{\sigma_{i,k}\sqrt{2}}\right)} \right] \; ,
+\mean_{\mathrm{lines},j} & = &  \sum_{k=1}^{K}\sum_{i=1}^{N}{\int^{ \lambda_{j,\mathrm{high}}}_{\lambda_{j, \mathrm{low}}}{\frac{A_{i,k}}{\sigma_{i,k}\sqrt{2\pi}} \exp{(-(\lambda-\mu_{i,k})^2/{2\sigma_{i,k}^2})}}} \\ \nonumber
+& = & \frac{1}{2}  \sum_{k=1}^{K} \sum_{i=1}^{N} A_{i,k}   \left[ \erf{\left( \frac{\lambda_{j,\mathrm{high}} - \mu_{i,k}}{\sigma_{i,k}\sqrt{2}}\right)} - \erf{\left( \frac{\lambda_{j, \mathrm{low}} - \mu_{i,k}}{\sigma_{i,k}\sqrt{2}}\right)} \right] \; ,
 \end{eqnarray}
 
-\noindent where $j$ is the index of a wavelength bin and $\erf$ defines the error function. 
+\noindent where $j$ is the index of a wavelength bin and $\erf$ defines the error function. The assumed Gaussian shape of the line profile is chosen in part for its simplicity, in part because the generally low signal-to-noise ratio of the currently available X-ray observations make distinguishing between different line profiles very difficult. In principle, it is easily possible to exchange the Gaussian profile for another shape, e.g.\ a Lorentzian, as long as the chosen function admits the existence of a cumulative distribution function. For future instruments with higher sensitivity, the model proposed here than also allows for a straightforward comparison between line profile models via the marginal likelihood. 
 
 X-ray spectra have very noticeable continuum contributions as well as calibration that needs to be performed on the data. In most high-resolution spectra, the continuum and spectral lines will be fit together with the continuum, though the presence of individual lines must be confirmed via hypothesis testing. Response matrices describing the calibration effects are generated in advance and applied---depending on the software being used---either on the data itself, to move the data from the detector space into the flux space corresponding to the emission incident on the detector, or on the model, moving the model into the detector space instead. In general, calibration for any instrument is rarely complete, and residuals from imperfect calibration may remain in the data. 
 In principle, the statistically consistent approach to the model we propose here would be to include both various choices for calibration as well as the parameters of the model describing the continuum in the same model as the spectral lines and sample all model components together. Because both continuum modelling and calibration is a non-trivial task for high-resolution spectroscopy, we do not attempt in this work to include this contribution, but note that there is scope for improvement in this direction in the future. %%% Note to self: This might need to change if we actually do include continuum models!
@@ -112,15 +122,16 @@ We choose a simple model to account for residual continuum contributions and pot
 We regard these parameters as nuisance parameters, which will be sampled along with the remaining parameters of the model and integrated out for the final parameter estimates. 
 Thus, the complete model for an observed X-ray spectrum is
 
-\begin{equation}
+\begin{eqnarray}
 \label{eqn:modelflux}
-m_j = m_{\mathrm{lines},j} + m_{\mathrm{bkg}}*\mathrm{OU}(\lambda_j, \tau_{\mathrm{OU}}, A_{\mathrm{OU}}) \; .
-\end{equation}
+m_j & = & \exp{(m_{\mathrm{lines},j} + \log{m_{\mathrm{bkg}}})} \\ \nonumber
+	& & \times \mathrm{OU}(\lambda_j, \tau_{\mathrm{OU}}, A_{\mathrm{OU}}) \; .
+\end{eqnarray}
 
 \noindent This assumes that the spectral lines are independent of any continuum and calibration errors that were not removed in the pre-processing. 
 
 \subsection{The hierarchical model}
-
+\label{sec:hierarchicalmodel}
 We now build a hierarchical model to infer the number of different Doppler shifts present in the data, $K$, the values of $z_k$ themselves as well as the line properties ${\pars_{i,k}} = \{A_{i,k}, \sigma_{i,k}\}$ for each line $i$ and each Doppler shift $z_k$. The centroid wavelength of each line $\mu_i,k$ is fixed given a Doppler shift $z_k$. In order to keep the model fairly simple, we assume that the line amplitudes and widths for different Doppler shifts share the same priors. This may not be a reasonable assumption for all spectral modelling problems, and we note that in future versions, this may be changed, though at the moment we prefer simplicity over complexity. 
 
 In addition, we also infer a number of hyperparameters $\alpha$ describing the prior distributions for the line widths and amplitudes (see Section \ref{sec:priors} for details) as well as the constant background and the parameters of the OU process: $\beta = \{\mean_{\bkg}, \tau_{\mathrm{OU}}, A_{\mathrm{OU}}\}$.
@@ -183,9 +194,7 @@ We mitigate this potential problem also sampling over the location and scale par
 \caption{Model Parameters and Prior Probability Distributions}
 %\resizebox{\textwidth}{!}{%
 \begin{threeparttable} 
-\begin{tabularx}{\textwidth}{p{4.0cm}p{7.0cm}X}%lrrrllll}%{lrrrllll}
-%\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} cll}%lrrrllll}%{lrrrllll}
-%\begin{tabular}{|l|r|r|l|r|r|r|r|l|}
+\begin{tabularx}{\textwidth}{p{4.0cm}p{7.0cm}X}
 \toprule
 \bf{Parameter} & \bf{Meaning} & \bf{Probability Distribution} \\ \midrule
 \it{Hyperparameters} && \\ \midrule
@@ -230,31 +239,73 @@ This is a problem that makes all sampling algorithms fail, and requires careful 
 
 \section{Simulated Data}
 
-\subsection{Simulated Cyg X-1 Observations}
+\subsection{Absorption Spectroscopy of Stellar Winds with \textit{ShiftyLines}}
 
-\section{Observations}
+\subsubsection{Hierarchical Model}
 
-\section{Results}
+\subsubsection{The Simulations}
 
-\subsection{Testing prior assumptions}
 
-How much do our results change if we change the priors? Need to test that!
+\subsubsection{Results}
 
-\section{Detection WHIM with Athena+ and \textit{Atrytone}}
+%% NOTE TO SELF: ADD CORNER PLOT WITH GROUND TRUTH + PARAMETER INFERENCES FOR MOST IMPORTANT PARAMETERS!
+
+\begin{table*}[hbtp]
+\renewcommand{\arraystretch}{1.3}
+\footnotesize
+\caption{Cygnus X-1 Simulated Spectra and Posterior Inferences}
+%\resizebox{\textwidth}{!}{%
+\begin{threeparttable} 
+\begin{tabularx}{\textwidth}{p{4.0cm}p{4.0cm}p{4.0cm}X}%lrrrllll}%{lrrrllll}
+%\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} cll}%lrrrllll}%{lrrrllll}
+%\begin{tabular}{|l|r|r|l|r|r|r|r|l|}
+\toprule
+\bf{Parameter name} & \bf{Ground truth} & \bf{Posterior mean} & \bf{Posterior standard deviation} \\ \midrule
+Doppler shift & & & \\ 
+\bottomrule
+\end{tabularx}
+   \begin{tablenotes}
+      %\footnotesize
+      \item{Ground truth values and posterior parameter inferences for simulated \chandra\ HETG spectra of Cygnus X-1.}
+     %\item[\emph{a}]{See Section \ref{ch6:priortest} for a discussion on testing an alternative, log-normal prior for spike amplitude and exponential rise time scale.}
+     %\item[\emph{a}]{$T_\mathrm{b}$: duration of total burst}
+\end{tablenotes}
+\end{threeparttable}
+\label{tab:cygx1_sims}
+%\tablecomments{An overview over the model parameters and hyperparameters with their respective prior probability distributions. For parameters where we have explored an alternative distribution in Section 
+%\ref{ch6:priortest}, we give parameters and distributions for both priors.}
+%\end{sidewaystable}
+\end{table*}
+
+
+
+
+\subsection{Detection WHIM with Athena+ and \textit{Atrytone}}
 
 One of the key objectives of the proposed \athena\ mission is the detection of the missing baryons proposed to reside in the Warm-Hot Intergalactic Medium (WHIM). \athena\ is poised to detect the signature of the WHIM via absorption spectroscopy from bright Gamma-Ray Burst (GRB) afterglows and Active Galactic Nuclei (AGN): as the hard X-ray emission from these sources passes through the intergalactic medium, it will become absorbed by the intergalactic medium and produce absorption features in highly ionized elements such as oxygen (O VII and O VIII). 
 
 The resulting signatures in the X-ray spectra obtained by the \athena X-IFU instrument will depend strongly on the brightness of the backlight source (i.e.\ the GRB afterglow or AGN emission) as well as the equivalent width of the line produced in the WHIM. Current best methods are based on \citep{protassov2002} and use classical p-values to characterize the detection significance. \citep{brand2016} present a procedure that fits a spectrum including a Gaussian line, whose line centre is fixed at a certain photon energy, and the width and amplitude of the line left to vary. That model is subsequently compared via a likelihood ratio test to a model without a line present, and the resulting p-value calibrated via MCMC. This test is repeated for a number of test photon energies; the photon energy with the lowest p-value is then the candidate line detection. The biggest shortcoming of this approach lies in the large number of trials: for a typical \athena\ X-IFU spectrum, even restricted to a certain energy range corresponding to a small range in cosmological redshifts, hundreds of trial photon energies must be tested. In simulations, this results in low detectability particularly of weak lines. Additionally, the numerous MCMC runs lead to a prohibitively large computation time. On a statistical level, the use of p-values leads to considerable uncertainty in the resulting inferences: how does one interpret the results of this method when the ground truth isn't known? What is the uncertainty on the Doppler shift derived? 
 
-\subsection{A Hierarchical Model for WHIM Detection}
+\subsubsection{A Hierarchical Model for WHIM Detection}
 
 Here, we propose a procedure based on a stripped-down version of the \textit{ShiftyLines} model: we restrict the number of Doppler shift to two values: 0 (no Doppler shift, i.e.\ no lines present), and 1 (with a variable Doppler shift to be inferred). Following \citep{brand2016}, we assume that there are two potential lines present: O VII at 0.574 keV and O VIII 0.654 keV. As with \textit{ShiftyLines}, we assume that these lines are always present, though their amplitude could tend toward zero if only one line is present in practice. Unlike \textit{ShiftyLines}, we assume that both lines must be absorption features, consistent with the scientific reasoning behind the model. This eliminates the sign parameter for each line component as well as its corresponding hyperparameter. We restrict the lines to be narrow (HOW NARROW?). The new model lives in its own repository to avoid confusion with \textit{ShiftyLines}; we call this model \textit{atrytone}. 
 
-\subsection{Simulations}
+\subsubsection{Simulations}
 
 As part of the \athena\ X-IFU WHIM Data Challenge, the \athena\ collaboration released a set of simulated spectra with a range of predictions for WHIM line equivalent widths as well as variable flux of the background source. Here, we present the results of our hierarchical model and compare it with \citep{brand2016}.
 
-\section{Discussions}
+\subsubsection{Results}
+
+
+
+\subsection{Testing prior assumptions}
+
+How much do our results change if we change the priors? Need to test that!
+
+\section{Observations}
+
+
+\section{Discussion}
 
 
 
