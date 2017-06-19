@@ -32,9 +32,7 @@ int main(int argc, char** argv)
 
 	// file with line positions in same units as data; CURRENTLY HARDCODED!
 	Data::get_instance().load_lines("../data/si_lines_kev.txt");
- 
-//        cout<<"Loaded line data ..."<<endl;
- 
+  
 	// sample!
 	Sampler<MyModel> sampler = setup<MyModel>(options);
   

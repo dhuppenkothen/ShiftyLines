@@ -42,7 +42,7 @@ void MyConditionalPrior::from_prior(RNG& rng)
 	mu_logwidth = (log(f_range/10.) - log(min_df/5.0))*rng.rand() + log(min_df/5.0);
   
 	// sigma_logq is uniformely distributed between 0 and 0.3
-	sigma_logwidth =  (0.3 - 0.)*rng.rand() + 0.;
+	sigma_logwidth =  (1.0 - 0.)*rng.rand() + 0.;
 
 	// The parameter p deciding on the threshold for the signs has a Uniform distribution
 	pp = (1.0 - 0.)*rng.rand() + 0.;
@@ -81,8 +81,8 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 	}
 	if(which == 3)
 	{
-		sigma_logwidth += rng.randh()*(0.3 - 0.0);
-		wrap(sigma_logwidth, 0.0, 0.3);
+		sigma_logwidth += rng.randh()*(1.0 - 0.0);
+		wrap(sigma_logwidth, 0.0, 1.0);
 	}
 	if(which == 4)
 	{
