@@ -175,9 +175,9 @@ void MyModel::calculate_mu()
 			int sh=0;	
         	        for(size_t i=0; i<mu_h.size(); i++)
         	        {
-                                mu_h_bkg[i] = exp(slope*log(f_mid_h[i]) + log(background));
-
-
+                                //mu_h_bkg[i] = exp(slope*log(f_mid_h[i]) + log(background));
+                                mu_h_bkg[i] = exp(log(background/(slope + 1.)) + log(f_right_h[i]) * (slope + 1.))
+                                                 - exp(log(background/(slope + 1.)) + log(f_left_h[i]) * (slope + 1.))
 
 		                if (f_left_h[i] < f_min)                        
 		                       continue;
@@ -205,7 +205,9 @@ void MyModel::calculate_mu()
                         int sm=0;
                         for(size_t i=0; i<mu_m.size(); i++)
                         {
-                                mu_m_bkg[i] = exp(slope*log(f_mid_m[i]) + log(background));
+                                //mu_m_bkg[i] = exp(slope*log(f_mid_m[i]) + log(background));
+				mu_m_bkg[i] = exp(log(background/(slope + 1.)) + log(f_right_m[i]) * (slope + 1.)) 
+						 - exp(log(background/(slope + 1.)) + log(f_left_m[i]) * (slope + 1.))
 
                                 if (f_left_m[i] < f_min)
                                        continue;
