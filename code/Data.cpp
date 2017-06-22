@@ -25,14 +25,10 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  //pha_heg_p = load_fits(datadir, "fake_heg_p1_5ks_ident0_src.pha");
-  //pha_meg_p = load_fits(datadir, "fake_meg_p1_5ks_ident0_src.pha");
-  //pha_heg_m = load_fits(datadir, "fake_heg_m1_5ks_ident0_src.pha");
-  //pha_meg_m = load_fits(datadir, "fake_meg_m1_5ks_ident0_src.pha");
-  pha_heg_p = load_fits(datadir, "heg_p1.pha");
-  pha_meg_p = load_fits(datadir, "meg_p1.pha");
-  pha_heg_m = load_fits(datadir, "heg_m1.pha");
-  pha_meg_m = load_fits(datadir, "meg_m1.pha");
+  pha_heg_p = load_fits(datadir, "fake_heg_p1_5ks_ident6_src.pha");
+  pha_meg_p = load_fits(datadir, "fake_meg_p1_5ks_ident6_src.pha");
+  pha_heg_m = load_fits(datadir, "fake_heg_m1_5ks_ident6_src.pha");
+  pha_meg_m = load_fits(datadir, "fake_meg_m1_5ks_ident6_src.pha");
 
 }
 
@@ -80,8 +76,8 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
 
   string eunit_lo, eunit_hi;
  
-  spectrum.readKey("TUNIT2", eunit_lo);
-  spectrum.readKey("TUNIT3", eunit_hi);
+  spectrum.readKey("TUNIT3", eunit_lo);
+  spectrum.readKey("TUNIT4", eunit_hi);
 
   //cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
 
