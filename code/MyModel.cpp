@@ -20,7 +20,7 @@ const PHAData& pha_meg_m = Data::get_instance().get_pha_meg_m();
 const DNest4::Cauchy MyModel::cauchy(0.0, 1.0);
 
 MyModel::MyModel()
-:dopplershift(3*nlines+1, 4, false, MyConditionalPrior())
+:dopplershift(4*nlines+1, 1, false, MyConditionalPrior())
 ,noise_normals_h(pha_heg_p.bin_lo.size())
 ,noise_normals_m(pha_meg_p.bin_lo.size())
 ,mu_hp(pha_heg_p.counts.size())
@@ -145,7 +145,7 @@ void MyModel::calculate_mu()
 	// get amplitudes and widths from the RJObject 
 	const vector< vector<double> >& dopplershiftcomponents = dopplershift.get_components();
  
-	vector<double> amplitude(nlines), sign(nlines), width(nlines);
+	vector<double> amplitude(nlines), sign(nlines), width(nlines), presence(nlines);
 	double dshift;
 
 //        // I'm only interested in a specific region of the spectrum
@@ -170,6 +170,7 @@ void MyModel::calculate_mu()
 					//logq[i] = dopplershiftcomponents[j][i+1+nlines];
       					sign[i] = dopplershiftcomponents[j][i+1+2*nlines];		
 					width[i] = exp(dopplershiftcomponents[j][i+1+nlines]);
+					presence[i] = dopplershiftcomponents[j][i+1+3*nlines];
 				}
 		
 			int sh=0;	
@@ -189,6 +190,10 @@ void MyModel::calculate_mu()
 
 					for (int k=0; k<nlines; k++)
 						{
+						if (presence[k] < dopplershift.get_conditional_prior().get_pp_presence())
+							continue;
+						else
+						{
 						// Integral over the Lorentzian distribution
 						if (sign[k] < dopplershift.get_conditional_prior().get_pp()) 
 							sh = -1;
@@ -198,6 +203,7 @@ void MyModel::calculate_mu()
 						   (std::abs(f_left_h[i] - line_pos_shifted[k]) < 5.*width[k])) 
 							mu_h[i] += sh*amplitude[k]*(gaussian_cdf(f_right_h[i], line_pos_shifted[k], width[k])
 										- gaussian_cdf(f_left_h[i], line_pos_shifted[k], width[k]));
+					}
 					}
                 		}	 
 			}
@@ -219,6 +225,10 @@ void MyModel::calculate_mu()
 
                                         for (int k=0; k<nlines; k++)
                                                 {
+						if (presence[k] < dopplershift.get_conditional_prior().get_pp_presence())
+							continue;
+						else
+						{
                                                 // Integral over the Lorentzian distribution
                                                 if (sign[k] < dopplershift.get_conditional_prior().get_pp())
                                                         sm = -1;
@@ -229,6 +239,7 @@ void MyModel::calculate_mu()
                                                         mu_m[i] += sm*amplitude[k]*(gaussian_cdf(f_right_m[i], line_pos_shifted[k], width[k])
                                                                                 - gaussian_cdf(f_left_m[i], line_pos_shifted[k], width[k]));
                                                 }
+						}
                                 }
                         }
 
