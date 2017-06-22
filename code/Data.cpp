@@ -25,10 +25,10 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  pha_heg_p = load_fits(datadir, "fake_heg_p1_5ks_ident0_src.pha");
-  pha_meg_p = load_fits(datadir, "fake_meg_p1_5ks_ident0_src.pha");
-  pha_heg_m = load_fits(datadir, "fake_heg_m1_5ks_ident0_src.pha");
-  pha_meg_m = load_fits(datadir, "fake_meg_m1_5ks_ident0_src.pha");
+  pha_heg_p = load_fits(datadir, "fake_heg_p1_5ks_ident6_src.pha");
+  pha_meg_p = load_fits(datadir, "fake_meg_p1_5ks_ident6_src.pha");
+  pha_heg_m = load_fits(datadir, "fake_heg_m1_5ks_ident6_src.pha");
+  pha_meg_m = load_fits(datadir, "fake_meg_m1_5ks_ident6_src.pha");
 
 }
 
@@ -54,21 +54,21 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   CCfits::Column& column2 = spectrum.column("COUNTS");
   column2.read(pha.counts, 1, column2.rows());
 
-  CCfits::Column& column3 = spectrum.column("BIN_LO");
-  column3.read(pha.bin_lo, 1, column3.rows());
+//  CCfits::Column& column3 = spectrum.column("BIN_LO");
+//  column3.read(pha.bin_lo, 1, column3.rows());
  
-  CCfits::Column& column4 = spectrum.column("BIN_HI");
-  column4.read(pha.bin_hi, 1, column4.rows());
-
-  vector<double> bin_mid(pha.bin_lo.size(), 0.0);
-
-  // compute the middle of the energy bins
-  for(size_t i=0; i<pha.bin_lo.size(); i++){
-     bin_mid[i] = pha.bin_lo[i] + (pha.bin_hi[i] - pha.bin_lo[i])/2.0;
-  }
-
-  pha.bin_mid = bin_mid;
-
+//  CCfits::Column& column4 = spectrum.column("BIN_HI");
+//  column4.read(pha.bin_hi, 1, column4.rows());
+//
+//  vector<double> bin_mid(pha.bin_lo.size(), 0.0);
+//
+//  // compute the middle of the energy bins
+//  for(size_t i=0; i<pha.bin_lo.size(); i++){
+//     bin_mid[i] = pha.bin_lo[i] + (pha.bin_hi[i] - pha.bin_lo[i])/2.0;
+//  }
+//
+//  pha.bin_mid = bin_mid;
+//
   string respfile, ancrfile;
   // need to read some keys, too!
   spectrum.readKey("RESPFILE", respfile);
@@ -81,8 +81,8 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
 
   //cout<<"# Unit of the energy bins: "<<eunit_lo<<"."<<endl;
 
-  pha.bin_lo_unit = eunit_lo;
-  pha.bin_hi_unit = eunit_hi;
+  pha.bin_lo_unit = "keV";//eunit_lo;
+  pha.bin_hi_unit = "keV";//eunit_hi;
 
   pha.respfile = respfile;
   pha.ancrfile = ancrfile;
@@ -106,6 +106,15 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   const char *ancrfilechars = pha.ancrfile.c_str();
 
   pha.arf = load_arf(datadir, ancrfilechars);
+
+  pha.bin_lo.assign(pha.counts.size(), 0.0);
+  pha.bin_hi.assign(pha.counts.size(), 0.0);
+
+  for (int i=0; i<pha.counts.size(); i++)
+    {
+    pha.bin_lo[i] = pha.arf.energ_lo[i];
+    pha.bin_hi[i] = pha.arf.energ_hi[i];
+    }
 
   return pha;
 
