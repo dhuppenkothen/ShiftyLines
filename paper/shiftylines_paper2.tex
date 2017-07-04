@@ -1,0 +1,235 @@
+\documentclass[12pt]{emulateapj}
+\usepackage{graphicx}
+%\usepackage{epsfig}
+\usepackage{times}
+\usepackage{natbib}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amsbsy}
+\usepackage{bm}
+\usepackage{hyperref}
+\usepackage{url}
+%\usepackage{subfigure}
+\usepackage{microtype}
+\usepackage{rotating}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{tabularx}
+\usepackage{subfigure}
+\DeclareMathOperator\erf{erf}
+
+
+%\usepackage{longtable}%\usepackage[stable]{footmisc}
+%\usepackage{color}
+%\bibliographystyle{apj}
+
+\newcommand{\project}[1]{\textsl{#1}}
+\newcommand{\fermi}{\project{Fermi}}
+\newcommand{\rxte}{\project{RXTE}}
+\newcommand{\chandra}{\project{Chandra}}
+\newcommand{\athena}{\project{Athena+}}
+\newcommand{\xmm}{\project{XMM-Newton}}
+\newcommand{\given}{\,|\,}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\counts}{y}
+\newcommand{\pars}{\theta}
+\newcommand{\mean}{m}
+\newcommand{\likelihood}{{\mathcal L}}
+\newcommand{\Poisson}{{\mathcal P}}
+\newcommand{\Uniform}{{\mathcal U}}
+\newcommand{\bkg}{\mathrm{bkg}}
+\newcommand{\word}{\phi}
+
+%\usepackage{breqn}
+
+%\newcommand{\bs}{\boldsymbol}
+
+\begin{document}
+
+\title{Probabilistic inference of Doppler-Shifted Spectral Lines from High-Resolution X-ray Spectroscopy II: Multiple Doppler Shifts}
+
+\author{D. Huppenkothen\altaffilmark{1, 2, 3}, B. J. Brewer\altaffilmark{4}, Victoria Grinberg\altaffilmark{5}}
+ 
+  \altaffiltext{1}{Center for Data Science, New York University, 60 5th Avenue, 6th Floor, New York, NY 10003}
+    \altaffiltext{2}{Center for Cosmology and Particle Physics, New York University, 726 Broadway, 9th Floor, New York, NY 10003}
+  \altaffiltext{3}{{\tt daniela.huppenkothen@nyu.edu}}
+  \altaffiltext{4}{Department of Statistics, The University of Auckland, Private Bag 92019, Auckland 1142, New Zealand}
+  \altaffiltext{5}{MIT Kavli Institute for Astrophysics and Space Research,
+MIT, 70 Vassar Street, Cambridge, MA 02139, USA}
+
+
+\begin{abstract}
+Stellar winds and winds from accretion disks have Doppler shifts. Sometimes, there can be more than one Doppler shift in 
+the same X-ray spectrum. Here, we solve the second problem where (a) we do not know the line amplitudes and widths, (b) the 
+number of Doppler shifts in the system and (c) which line is present in which Doppler-shifted component.
+\end{abstract}
+
+\keywords{methods:statistics}
+
+\section{Introduction}
+[NOTE: This is currently the same intro as in paper 1]
+
+Spectroscopy of the light observed from astronomical objects is one of the primary ways to study the composition, thermal state and dynamics of the gas and plasma that produced the emission. Hot plasmas produce X-ray emission lines of heavy elements, often used to study for example supernova remnants. The Fe K$\alpha$ fluorescence line at $6.4 \, \mathrm{keV}$ holds a special position in high-energy astrophysics are being a key diagnostic for the dynamics of black hole systems. The hard X-ray emission from some X-ray sources is absorbed by circumstellar as well as interstellar and -galactic media, producing absorption lines that act as key tracers for the elements and ionization states of these media. 
+
+With the advent of high-resolution X-ray spectrometers such as the \chandra\ High-Energy Transmission Grating (HETG) and the \xmm\ Reflection Grating Spectrometer (RGS), it has become possible to study these systems in increasing detail. In the black hole X-ray binary V404 Cygni, spectra taken with the \chandra\ HETG revealed strong P Cygni profiles indicating the presence of a strong disk wind. Recently, high-resolution spectroscopy of the high-mass X-ray binary Cygnus X-1 revealed a time-dependence of spectral lines corresponding to the low ionization states of several heavy elements \citep{hirsch_inprep}. The occurrence of these states during dips in the total brightness led to the hypothesis that the stellar wind emitted by the black hole's O-star companion is clumpy. The absorption features observed are produced when hard X-ray emission from the accretion flow encounters these clumps, whose interior is at a lower temperature and ionization state than the surrounding gas. As of now, only a qualitative description of the clumpy stellar wind and its effect on the observed X-ray spectrum exists. A more quantitative description is hampered by two major problems: the identification of the lines in the spectrum, and how the observed lines are related to the material's ionization state. 
+
+The identification of the lines has two key components: first, a statistical procedure must decide whether there is a feature at a given wavelength at all. Once that feature is confirmed to some statistical significance, it must be identified with a corresponding line transition and element. In a stellar wind in particular, the latter part is complicated by the fact that the material is moving, and thus any lines observed will be at a certain Doppler shift. Identification of the lines with a physical model of the medium and its temperature is very time consuming and complex: current simulations of the full medium can require several minutes for a single simulation step, and thus are rarely feasible for involved analyses. As a result, most commonly spectral lines are identified by hand. Usually, this will include some kind of fitting of a Gaussian or Lorentzian line profile where a feature is evident in the spectrum. The presence of the line will then be confirmed using some kind of hypothesis test, and the fitted centroid frequency used to identify the line with a transition. 
+
+This procedure, while fairly general, has several shortcomings. Most severely, it does not make sufficient use of all the information we have. If we identify a transition belonging to a certain element at a particular Doppler shift, it is more probably to observe other transitions of the same element at that Doppler shift. A procedure that uses the structure of the problem in this way can capitalize on significantly more information in the data than is currently being used, and thus allow for more precise inferences even when using weaker lines. This paper presents an approach to this problem using Bayesian hierarchical models, a flexible way to design statistical models that allows for nearly arbitrary information about the problem's structure to be included in the model. The model we build in Section \ref{sec:method} allows for the presence of multiple Doppler-shifted media producing a spectrum that is a linear combination of the emission and absorption features of each medium. In its simplest form here, it only takes into account that several absorption lines could be Doppler-shifted in similar ways. In principle, however, the same model could easily be extended to include more complex knowledge about the underlying nuclear physics, for example when the presence of certain features automatically disallows certain other line transitions. This, however, is future work beyond the scope of this paper, since it requires detailed knowledge about the nuclear physics currently not available. 
+
+There are other astrophysical problems where similar questions arise. For
+example, many galaxy-galaxy strong gravitational lens systems were
+found by the Sloan Lens ACS Survey \citep[SLACS;][]{slacs0, slacs1} by searching
+the Sloan Digital Sky Survey for sources whose spectra seemed to contain two
+redshifts. Hubble Space Telescope imaging was then used to find the candidates
+that were actually gravitational lenses.
+The methods used by SLACS to identify two redshifts in a spectrum can be
+considered as more heuristic solution to the same problem we consider in this
+paper. However, we focus more on the issue of characterizing all of the
+uncertainties (i.e. exploring the range of hypotheses plausible given the
+spectral data), rather than prioritizing computational speed.
+
+This work is particularly relevant in the context of future missions such as \athena, which will supply spectroscopic data with unprecedented resolution and sensitivity, and will thus allow us to study X-ray emitting and absorbing systems with a level of detail never possible before.
+
+
+\section{Method}
+\label{sec:method}
+
+\subsection{The Spectral Model}
+\label{sec:spectralmodel}
+
+[NOTE: Also copied this from paper 1 before I delete the parts that reflect the model with multiple Doppler shifts.]
+
+
+High-resolution spectral data consists of a continuum with a set of spectral lines superposed. A priori, we (approximately) know the rest frame wavelengths of the most common lines, but neither the amplitudes nor widths of these lines is known, thus they should be part of the inference process. Strictly speaking, because rest frame line positions in the spectrum are based on laboratory measurements, they have an uncertainty associated with them, too, but we currently do not take this uncertainty into account in the model.
+
+The objective, given a spectrum and a set of rest frame wavelengths of spectral lines, is to infer the amplitudes and widths of all (potential) lines at the same time the Doppler shift affecting the centroid wavelengths of the spectral lines. Not all lines may be present in the data, but we consciously avoid performing model selection tasks for each individual line. Instead, we rephrase the problem as a parameter estimation task only, where a presence parameter $p$ can either be $0$ (line absent) or $1$ (line present) for each line.%the absence of a line will lead to a model preferring a very small amplitude for that line. This reflects our state of knowledge of the system: in practice, it is impossible to distinguish between the absence of a line and a line with a very small amplitude.
+%At the moment, for any Doppler shift $z_k = v_i/c$, all lines can be present. In principle, the model in its current form may model individual lines as mixtures of lines from several Doppler shifts. Depending on the system of interest, this may or may not have a physical motivation. 
+
+Each line $(i,k), \, i \in \{0, ..., N\}$ for a Doppler shift $z_k \in \{z_0, ..., z_K\}$ is modelled as a Gaussian with location and scale parameters $\mu_{i,k}$ and $\sigma_{i,k}$ as well as an amplitude $A_{i,k}$, respectively. Note that $A_{i,k}$ is defined as the integrated flux (or counts, depending on the units of the data) over the line. We compute the line flux in each wavelength bin $j$ by integrating the model flux $\mean_j$ within the bin from the lower edge $\lambda_{j, \mathrm{low}}$ to the upper bin edge $\lambda_{j, \mathrm{high}}$:
+
+\begin{eqnarray}
+\mean_{\mathrm{lines},j} & = &  \sum_{k=1}^{K}\sum_{i=1}^{N}{\int^{ \lambda_{j,\mathrm{high}}}_{\lambda_{j, \mathrm{low}}}{\frac{A_{i,k}}{\sigma_{i,k}\sqrt{2\pi}} \exp{(-(\lambda-\mu_{i,k})^2/{2\sigma_{i,k}^2})}}} \\ \nonumber
+& = & \frac{1}{2}  \sum_{k=1}^{K} \sum_{i=1}^{N} A_{i,k}   \left[ \erf{\left( \frac{\lambda_{j,\mathrm{high}} - \mu_{i,k}}{\sigma_{i,k}\sqrt{2}}\right)} - \erf{\left( \frac{\lambda_{j, \mathrm{low}} - \mu_{i,k}}{\sigma_{i,k}\sqrt{2}}\right)} \right] \; ,
+\end{eqnarray}
+
+\noindent where $j$ is the index of a wavelength bin and $\erf$ defines the error function. The assumed Gaussian shape of the line profile is chosen in part for its simplicity, in part because the generally low signal-to-noise ratio of the currently available X-ray observations make distinguishing between different line profiles very difficult. In principle, it is easily possible to exchange the Gaussian profile for another shape, e.g.\ a Lorentzian, as long as the chosen function admits the existence of a cumulative distribution function. For future instruments with higher sensitivity, the model proposed here than also allows for a straightforward comparison between line profile models via the marginal likelihood. 
+
+X-ray spectra have very noticeable continuum contributions as well as calibration that needs to be performed on the data. In most high-resolution spectra, the continuum and spectral lines will be fit together with the continuum, though the presence of individual lines must be confirmed via hypothesis testing. Response matrices describing the calibration effects are generated in advance and applied---depending on the software being used---either on the data itself, to move the data from the detector space into the flux space corresponding to the emission incident on the detector, or on the model, moving the model into the detector space instead. In general, calibration for any instrument is rarely complete, and residuals from imperfect calibration may remain in the data. 
+In principle, the statistically consistent approach to the model we propose here would be to include both various choices for calibration as well as the parameters of the model describing the continuum in the same model as the spectral lines and sample all model components together. Because both continuum modelling and calibration is a non-trivial task for high-resolution spectroscopy, we do not attempt in this work to include this contribution, but note that there is scope for improvement in this direction in the future. %%% Note to self: This might need to change if we actually do include continuum models!
+It is also often the case that the high-resolution spectra observed with e.g.\ \chandra\ require different calibration at different wavelengths, thus one often separates the spectrum into two or more intervals which are calibrated and subsequently modelled independently. In this case, a full continuum model is often unnecessary and supplanted either by a power law or a spline modelling the remainder of the continuum. While the latter approach discards valuable information by modelling intervals independently even though they belong to the same source spectrum, for the purposes of this work, it makes the analysis considerably easier.
+We choose a simple model to account for residual continuum contributions and potential biases due to incorrect calibration by modeling the continuum by a combination of a simple constant model $\mean_{\mathrm{bkg}}$ and an autoregressive process called an Ornstein-Uhlenbeck (OU) process. The latter is a damped random walk capable of modelling trends in the data as well as smaller irregularities. It adds two parameters to the model: a length scale $\tau_{\mathrm{OU}}$ describing the interval within which correlations are important, and an amplitude $A_{\mathrm{OU}}$ describing the variance of the induced fluctuations. 
+We regard these parameters as nuisance parameters, which will be sampled along with the remaining parameters of the model and integrated out for the final parameter estimates. 
+Thus, the complete model for an observed X-ray spectrum is
+
+\begin{eqnarray}
+\label{eqn:modelflux}
+m_j & = & \exp{(m_{\mathrm{lines},j} + \log{m_{\mathrm{bkg}}})} \\ \nonumber
+	& & \times \mathrm{OU}(\lambda_j, \tau_{\mathrm{OU}}, A_{\mathrm{OU}}) \; .
+\end{eqnarray}
+
+\noindent This assumes that the spectral lines are independent of any continuum and calibration errors that were not removed in the pre-processing. 
+
+\subsection{The hierarchical model}
+\label{sec:hierarchicalmodel}
+We now build a hierarchical model to infer the number of different Doppler shifts present in the data, $K$, the values of $z_k$ themselves as well as the line properties ${\pars_{i,k}} = \{A_{i,k}, \sigma_{i,k}\}$ for each line $i$ and each Doppler shift $z_k$. The centroid wavelength of each line $\mu_i,k$ is fixed given a Doppler shift $z_k$. In order to keep the model fairly simple, we assume that the line amplitudes and widths for different Doppler shifts share the same priors. This may not be a reasonable assumption for all spectral modelling problems, and we note that in future versions, this may be changed, though at the moment we prefer simplicity over complexity. 
+
+In addition, we also infer a number of hyperparameters $\alpha$ describing the prior distributions for the line widths and amplitudes (see Section \ref{sec:priors} for details) as well as the constant background and the parameters of the OU process: $\beta = \{\mean_{\bkg}, \tau_{\mathrm{OU}}, A_{\mathrm{OU}}\}$.
+
+The posterior distribution over all the parameters takes the form
+
+\begin{eqnarray}
+p(K, \{z_k\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} \given  \bm{\counts}, H) & = & \likelihood(K, \{z_k\}, \bm{\alpha}, \beta, \{\bm{\pars_{i,k}}\}) \\\nonumber
+					& & \times \pi(K, \{z_k\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} \given H) \\\nonumber
+					& &  / p(\bm{\counts} \given H)\; ,
+\end{eqnarray} 
+
+\noindent where $\likelihood(K, \{z_k\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\})$ describes the likelihood of the data and $\pi(K, \{z_k\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\} $ the prior. $H$ stands in as a place-holder for all other assumptions made in the model, including the shape of the priors and the sampling distribution chosen in the likelihood. The distribution $p(\bm{\counts} \given H)$ is called the marginal likelihood or Bayesian evidence and in effect a normalization that ensures the posterior to be a proper probability distribution:
+
+\begin{eqnarray}
+p(\bm{\counts} \given H) & = & \int_\Omega{ \likelihood(K, \{z_k\}, \bm{\alpha}, \beta, \{\bm{\pars_{i,k}}\}) } \\\nonumber
+					& &{ \times \pi(K, \{z_k\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} \given H) d\Omega} \; ,
+\end{eqnarray}
+
+\noindent where $\Omega$ describes the volume of the entire parameter space allowed by the prior. The marginal likelihood is of use in particular in a model comparison context, where it is used to compute the posterior of a model $H$ given the data $\bm{\counts}$: $p(H \given \bm{\counts}) \propto p(D \given H) p(H)$. In practice, however, it is a high-dimensional integral with generally no analytic solution and thus often very difficult to compute.
+
+The likelihood is defined as the probability of observing the data $\bm{\counts}$ given a specific set of hyperparameters $\alpha$, and parameters $\beta$, $D$ and $\{\pars_{i,k}$. For all simulated and observed data sets below, we work in data space, that is, we calculate the model source spectrum as defined in Section \ref{sec:spectralmodel} in flux space and then apply the telescope response files of the observation (or simulation) to the source flux. Because the output will be a model spectrum in photon counts per bin, as recorded by the X-ray detector, we use the Poisson distribution to calculate the likelihood of observing the data given this model spectrum:
+
+\begin{eqnarray}
+\likelihood(K, \bm{\alpha}, \{\bm{\pars_{i,k}}\}) & = & p(\bm{\counts} \given K, \{z_k\}, \alpha, \beta, \{\bm{\pars_{i,k}}\}, H) \\ \nonumber
+			& = & \prod_{j=1}^{J}{p(\counts_j \given K, \{z_k\}, \alpha, \beta, \{\bm{\pars_{i,k}}\}, H)} \\\nonumber
+			%& = & \prod_{j=1}^{J}{\frac{1}{\sigma_j \sqrt{2\pi}}\exp{\left(\frac{(\counts_j - \mean_j)^2}{2\sigma_j^2} \right)}} \; ,
+			& = &  \prod_{j=1}^{J} \frac{ \mean_j^{\counts_j} e^{-\mean_j}}{\counts_j !} 
+\end{eqnarray}	
+\noindent where $\mean_j$ describes the model flux as defined in Equation \ref{eqn:modelflux}. In reality, we compute the logarithm of the likelihood, which simply reduces to
+
+\begin{eqnarray}
+\log{\likelihood(K, \{z_k\}, \bm{\alpha}, \{\bm{\pars_{i,k}}\})} = & \sum_{j=1}^{J} & -\counts_j + \\ \nonumber 
+					    & & \mean_j \log{\counts_j} - \log{\mean_j !} %\left[ -\log{\sigma_j} - \log{\sqrt{2\pi}} \right. \\ \nonumber
+					% & & \left. -\frac{1}{\sigma_j \sqrt{2\pi}}\left(\frac{(\counts_j - \mean_j)^2}{2\sigma_j^2} \right)\right] \; .
+\end{eqnarray}
+
+For the prior distributions, we assume independence between the individual parameters as well as hyperparameters, such that the 
+prior  $\pi(K, \{z_k\}, \alpha, \beta, \{\bm{\pars_{i,k}}\} $ can be split up into simpler distributions:
+
+\begin{eqnarray}
+\pi(K, \{z_k\}, \bm{\alpha}, \bm{\beta}, \{\bm{\pars_{i,k}}\} ) & = &  p(K \given H) p(\bm{\alpha} \given H) p(\bm{\beta} \given H)  \\	
+					& & \times \prod_{k=1}^{K}{\left[p(z_k \given H) \prod_{i=1}^{N}{p( \{\bm{\pars_{i,k}}\} \given \bm{\alpha}, H)}\right]} \nonumber
+\end{eqnarray}
+
+The details of the prior distributions chosen for this work are listed in the following section.
+
+\subsection{Priors}
+\label{sec:priors}
+
+As much as possible, priors were chosen that correspond to physical constraints on the system being studied, and non-informative priors were chosen where this was not possible. 
+
+We choose Laplace prior distributions for the line amplitudes and widths. The Laplace distribution is similar to the normal distribution in that the tails are exponential, and was chosen over the normal distribution predominantly for being somewhat numerically easier to implement. The choice of one prior distribution for all line amplitudes and widths intrinsically assumes that all line amplitudes and widths are drawn from the same distribution, whereas in reality this may not be true for different elements or different ions. Again, this choice was made to keep the model manageable in its first iteration when used on relatively simple spectra, but we may consider choosing more physically motivated priors for more challenging data in the future.
+The primary concern when making this choice is that if a spectrum contains very strong lines while at the same time missing lines at positions being sampled, the prior might inadvertently sample lower amplitudes for the strong lines or infer larger line amplitudes for the lines missing from the data.
+We mitigate this potential problem also sampling over the location and scale parameters of the Laplacian distributions for width and amplitudes. This allows a fairly flexible range of models by potentially making very wide prior distributions if the widths and amplitudes of lines are very different in the spectrum.
+
+\begin{table*}[hbtp]
+\renewcommand{\arraystretch}{1.3}
+\footnotesize
+\caption{Model Parameters and Prior Probability Distributions}
+%\resizebox{\textwidth}{!}{%
+\begin{threeparttable} 
+\begin{tabularx}{\textwidth}{p{4.0cm}p{7.0cm}X}
+\toprule
+\bf{Parameter} & \bf{Meaning} & \bf{Probability Distribution} \\ \midrule
+\it{Hyperparameters} && \\ \midrule
+$\mu_{\log{A}}$ & Mean of Laplacian prior distribution for line amplitude $\log{A}$ &   $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$  \\
+$\sigma_{\log{A}}$ & Standard deviation of Laplacian prior distribution for line amplitude $\log{A}$ & $\mathrm{Uniform}(0,2)$ \\
+$\mu_{\log{w}}$ & Mean of Laplacian prior distribution for the log-width $\log{w}$ & $\mathrm{Uniform}(\log{\min{\Delta\lambda}/5}, \log{0.1})$  \\
+$\sigma_{\log{w}}$ & Standard deviation of the Laplacian prior distribution for the log-width $\log{w}$ & $\mathrm{Uniform}(\log{0}, \log{0.3})$\\ 
+$\alpha$ & Threshold parameter for the amplitude signs (determining emission/absorption lines) &  $\mathrm{Uniform}(0,1)$\\
+\midrule
+\it{Individual Spectral Line Parameters} && \\ \midrule
+$\log{A_k}$ & logarithm of the amplitude of line $k$ & $\mathrm{Laplacian}(\mu_A \sigma_A)$ \\
+$\log{w_k}$ & logarithm of the line width & $\mathrm{Laplacian}(\mu_{\log{w}}, \sigma_{\log{w}})$ \\
+$\log{\counts}_{\mathrm{bkg}}$ & logarithm of the background flux & $\mathrm{truncated\, Cauchy\, distribution}(10^{-21}, 10^{21})$ \\
+$s_k$ & sign of each spectral line (determining either emission or absorption line) &  $\mathrm{Uniform}(0,1)$\\
+\midrule
+\it{Other Model Parameters} && \\ \midrule
+$d = v/c$ & Doppler shift $d$ parametrized as a function of velocity $v$ and speed of light $c$ & $\mathrm{Uniform}(-0.1, 0.1)$ \\
+$N$ & Number of possible Doppler shifts & $\mathrm{Uniform}(0,5)$  \\
+$\log{A_{\mathrm{OU}}}$ & Amplitude of the OU process & \\
+$\log{\tau_{\mathrm{OU}}}$ & length scale of the OU process & \\
+\bottomrule
+\end{tabularx}
+   \begin{tablenotes}
+      %\footnotesize
+      \item{An overview over the model parameters and hyperparameters with their respective prior probability distributions.}
+     %\item[\emph{a}]{See Section \ref{ch6:priortest} for a discussion on testing an alternative, log-normal prior for spike amplitude and exponential rise time scale.}
+     %\item[\emph{a}]{$T_\mathrm{b}$: duration of total burst}
+\end{tablenotes}
+\end{threeparttable}
+\label{tab:priortable}
+%\tablecomments{An overview over the model parameters and hyperparameters with their respective prior probability distributions. For parameters where we have explored an alternative distribution in Section 
+%\ref{ch6:priortest}, we give parameters and distributions for both priors.}
+%\end{sidewaystable}
+\end{table*}
+
+
+
+
