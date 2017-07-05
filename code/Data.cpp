@@ -25,10 +25,10 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  pha_heg_p = load_fits(datadir, "1weak_4strong_heg_p1_src.pha");
-  pha_meg_p = load_fits(datadir, "1weak_4strong_meg_p1_src.pha");
-  pha_heg_m = load_fits(datadir, "1weak_4strong_heg_m1_src.pha");
-  pha_meg_m = load_fits(datadir, "1weak_4strong_meg_m1_src.pha");
+  pha_heg_p = load_fits(datadir, "oneline_13_heg_p1_src.pha");
+  pha_meg_p = load_fits(datadir, "oneline_13_meg_p1_src.pha");
+  pha_heg_m = load_fits(datadir, "oneline_13_heg_m1_src.pha");
+  pha_meg_m = load_fits(datadir, "oneline_13_meg_m1_src.pha");
 
 }
 
