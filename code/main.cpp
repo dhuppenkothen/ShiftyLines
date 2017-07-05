@@ -13,7 +13,7 @@ int main(int argc, char** argv)
  
         //char datadir[50];
         //strcpy(datadir, "../data/cyg_daniela/");
-	std::string datadir = "../data/oneweak_morestrong/";
+	std::string datadir = "../data/oneline/";
 
 	// get the data filename from the command line
 	Data::get_instance().load_data(datadir.c_str(), options.get_data_file().c_str());
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
 
 	// file with line positions in same units as data; CURRENTLY HARDCODED!
-	Data::get_instance().load_lines("../data/oneweak_morestrong/lineenergylist");
+	Data::get_instance().load_lines("../data/oneline/one_line.txt");
   
 	// sample!
 	Sampler<MyModel> sampler = setup<MyModel>(options);

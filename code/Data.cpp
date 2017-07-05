@@ -338,8 +338,8 @@ void Data::load(const char* filename)
 
 void Data::compute_summaries()
 {
-	f_min = 1.83;
-	f_max = 2.03;
+	f_min = 1.95;
+	f_max = 2.05;
 	//f_min = 1.746256187217072;
 	//f_max = 2.0493255531922747;
 
