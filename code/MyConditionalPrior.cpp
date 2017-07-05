@@ -47,6 +47,9 @@ void MyConditionalPrior::from_prior(RNG& rng)
 	// The parameter p deciding on the threshold for the signs has a Uniform distribution
 	pp = (1.0 - 0.)*rng.rand() + 0.;
 
+        // The parameter p deciding on the threshold for the signs has a Uniform distribution
+        pp_presence = (1.0 - 0.)*rng.rand() + 0.;
+        
 }
 
 double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
@@ -55,7 +58,7 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
         double min_df = Data::get_instance().get_min_df();
         double f_range = Data::get_instance().get_f_range() ;
 
-	int which = rng.rand_int(5);
+	int which = rng.rand_int(6);
 
 	if(which == 0)
 	{
@@ -89,6 +92,12 @@ double MyConditionalPrior::perturb_hyperparameters(RNG& rng)
 		pp += rng.randh()*1.0;
 		wrap(pp, 0., 1.0);
 	}
+        if(which == 4)
+        {
+                pp_presence += rng.randh()*1.0;
+                wrap(pp_presence, 0., 1.0);
+        }
+
 	return logH;
 }
 
@@ -97,7 +106,7 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 
 	const int nlines = Data::get_instance().get_nlines();
 
-	double loga, logwidth, the_sign;
+	double loga, logwidth, the_sign, presence;
 	const double dshift = vec[0];
 
 	if(dshift < dmin || dshift > dmax)
@@ -112,9 +121,13 @@ double MyConditionalPrior::log_pdf(const std::vector<double>& vec) const
 			loga = vec[i+1];
 			logwidth = vec[i+1+nlines];
 			the_sign = vec[i+1+2*nlines];
+			presence = vec[i+1+3*nlines];
 	
 			if(the_sign < 0.0 || the_sign > 1.)
 				return -1E300;	
+
+                        if(presence < 0.0 || presence > 1.)
+                                return -1E300; 
 
 			//if(exp(loga) > background)
 			//	return -1E300;
@@ -188,7 +201,7 @@ void MyConditionalPrior::to_uniform(std::vector<double>& vec) const
 
 void MyConditionalPrior::print(std::ostream& out) const
 {
-	out<<mu_loga<<' '<<sigma_loga<<' '<<mu_logwidth<<' '<<sigma_logwidth<<' '<<pp<<' ';
+	out<<mu_loga<<' '<<sigma_loga<<' '<<mu_logwidth<<' '<<sigma_logwidth<<' '<<pp<<' '<<pp_presence<<' ';
 }
 
 

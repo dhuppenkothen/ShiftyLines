@@ -10,6 +10,7 @@ class MyConditionalPrior:public DNest4::ConditionalPrior
 		// Mean of amplitudes and widths
 		double mu_loga, sigma_loga, mu_logwidth, sigma_logwidth;
 		double pp;
+		double pp_presence;
 
 		static const double dmin, dmax;
 
@@ -28,6 +29,7 @@ class MyConditionalPrior:public DNest4::ConditionalPrior
 
 		// A getter
 		double get_pp() const { return pp; }
+                double get_pp_presence() const { return pp_presence; }
 
 		static const int weight_parameter = 1;
 
