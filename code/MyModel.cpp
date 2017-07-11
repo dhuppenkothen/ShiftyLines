@@ -251,20 +251,20 @@ void MyModel::calculate_mu()
 		{
 
 			mu_hp[ ii ] = exp(log(mu_h_bkg[ ii ]) + mu_h[ ii ]);
-                        mu_hp[ ii ] *= pha_heg_p.arf.specresp[ ii ];
+                        mu_hp[ ii ] *= (pha_heg_p.arf.specresp[ ii ] * pha_heg_p.exposure);
 
                         mu_hm[ ii ] = exp(log(mu_h_bkg[ ii ]) + mu_h[ ii ]);
-                        mu_hm[ ii ] *= pha_heg_m.arf.specresp[ ii ];
+                        mu_hm[ ii ] *= (pha_heg_m.arf.specresp[ ii ] * pha_heg_m.exposure);
 
 		}
  
         for (size_t ii = 0; ii < mu_m.size(); ii++ )
                 {
                         mu_mp[ ii ] = exp(log(mu_m_bkg[ ii ]) + mu_m[ ii ]);
-                        mu_mp[ ii ] *= pha_meg_p.arf.specresp[ ii ];
+                        mu_mp[ ii ] *= (pha_meg_p.arf.specresp[ ii ] * pha_meg_p.exposure);
 
                         mu_mm[ ii ] = exp(log(mu_m_bkg[ ii ]) + mu_m[ ii ]);
-                        mu_mm[ ii ] *= pha_meg_m.arf.specresp[ ii ];
+                        mu_mm[ ii ] *= (pha_meg_m.arf.specresp[ ii ] * pha_meg_m.exposure);
 
                 }
 

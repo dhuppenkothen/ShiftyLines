@@ -25,10 +25,10 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  pha_heg_p = load_fits(datadir, "1veryweak_1strong_heg_p1_src.pha");
-  pha_meg_p = load_fits(datadir, "1veryweak_1strong_meg_p1_src.pha");
-  pha_heg_m = load_fits(datadir, "1veryweak_1strong_heg_m1_src.pha");
-  pha_meg_m = load_fits(datadir, "1veryweak_1strong_meg_m1_src.pha");
+  pha_heg_p = load_fits(datadir, "0weak_3strong_heg_p1_src.pha");
+  pha_meg_p = load_fits(datadir, "0weak_3strong_meg_p1_src.pha");
+  pha_heg_m = load_fits(datadir, "0weak_3strong_heg_m1_src.pha");
+  pha_meg_m = load_fits(datadir, "0weak_3strong_meg_m1_src.pha");
 
 }
 
@@ -73,6 +73,10 @@ PHAData Data::load_fits(const char* datadir, const char* filename)
   // need to read some keys, too!
   spectrum.readKey("RESPFILE", respfile);
   spectrum.readKey("ANCRFILE", ancrfile);
+
+  double exposure;
+  spectrum.readKey("EXPOSURE", exposure);
+  pha.exposure = exposure;
 
   string eunit_lo, eunit_hi;
  
@@ -170,6 +174,7 @@ RMFData Data::load_rmf(const char* datadir, const char* filename)
 
   // somem keywords
   int detchans, tlmin;
+
   matrix.readKey("DETCHANS", detchans);
   try {
       // NOTE: Keyword hardcoded in, but probably shouldn't be!
