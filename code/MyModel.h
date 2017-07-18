@@ -101,6 +101,8 @@ class MyModel
 		std::string description() const;
 
 		static double gaussian_cdf(double x, double x0, double gamma);
+                static double lognormal_cdf(double x, double x0, double gamma);
+
 };
 
 #endif

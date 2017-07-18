@@ -25,10 +25,10 @@ Data::Data()
 
 void Data::load_data(const char* datadir, const char* filename)
 {
-  pha_heg_p = load_fits(datadir, "0weak_3strong_heg_p1_src.pha");
-  pha_meg_p = load_fits(datadir, "0weak_3strong_meg_p1_src.pha");
-  pha_heg_m = load_fits(datadir, "0weak_3strong_heg_m1_src.pha");
-  pha_meg_m = load_fits(datadir, "0weak_3strong_meg_m1_src.pha");
+  pha_heg_p = load_fits(datadir, "oneline_1_heg_p1_src.pha");
+  pha_meg_p = load_fits(datadir, "oneline_1_meg_p1_src.pha");
+  pha_heg_m = load_fits(datadir, "oneline_1_heg_m1_src.pha");
+  pha_meg_m = load_fits(datadir, "oneline_1_meg_m1_src.pha");
 
 }
 
@@ -343,7 +343,7 @@ void Data::load(const char* filename)
 
 void Data::compute_summaries()
 {
-	f_min = 1.80;
+	f_min = 1.95;
 	f_max = 2.05;
 	//f_min = 1.746256187217072;
 	//f_max = 2.0493255531922747;
