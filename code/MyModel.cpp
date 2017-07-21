@@ -35,9 +35,17 @@ double MyModel::gaussian_cdf(double x, double x0, double gamma)
 	return 0.5*(1. + Lookup::erf((x-x0)/(gamma*sqrt(2.))));
 }
 
-double MyModel::lognormal_cdf(double x, double x0, double gamma)
+double MyModel::loggaussian_int(double x_low, double x_high, double x0, double gamma, double amp)
 {
-        return 0.5*(1. + Lookup::erf((log(x)-x0)/(gamma*sqrt(2.))));
+	double x_diff, first_term, second_term, third_term;
+	x_diff = x_high - x_low;
+	first_term = log(amp) * x_diff;
+	second_term = 0.5*log(2.0 * M_PI * pow(gamma, 2)) * x_diff;
+	third_term = (1.0/(2.0*pow(gamma, 2)) ) * (pow(x_diff, 3)/3.0 - pow(x_diff, 2)*x0 + x_diff * x0);
+
+	return first_term - second_term - third_term;
+
+
 }
 
 template <typename ConstIntType, typename ConstFloatType,
@@ -206,8 +214,7 @@ void MyModel::calculate_mu()
 							sh = 1;
 						if ((std::abs(f_right_h[i] - line_pos_shifted[k]) < 5.*width[k]) && 
 						   (std::abs(f_left_h[i] - line_pos_shifted[k]) < 5.*width[k])) 
-							mu_h[i] += sh*amplitude[k]*(lognormal_cdf(f_right_h[i], line_pos_shifted[k], width[k])
-										- lognormal_cdf(f_left_h[i], line_pos_shifted[k], width[k]));
+							mu_h[i] += sh*loggaussian_int(f_left_h[i], f_right_h[i], line_pos_shifted[k], width[k], amplitude[k]);
 					}
 					}
                 		}	 
@@ -241,8 +248,7 @@ void MyModel::calculate_mu()
                                                         sm = 1;
                                                 if ((std::abs(f_right_m[i] - line_pos_shifted[k]) < 5.*width[k]) &&
                                                    (std::abs(f_left_m[i] - line_pos_shifted[k]) < 5.*width[k]))
-                                                        mu_m[i] += sm*amplitude[k]*(lognormal_cdf(f_right_m[i], line_pos_shifted[k], width[k])
-                                                                                - lognormal_cdf(f_left_m[i], line_pos_shifted[k], width[k]));
+                                                        mu_m[i] += sm*loggaussian_int(f_left_m[i], f_right_m[i], line_pos_shifted[k], width[k], amplitude[k]);
                                                 }
 						}
                                 }
