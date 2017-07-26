@@ -35,6 +35,18 @@ double MyModel::gaussian_cdf(double x, double x0, double gamma)
 	return 0.5*(1. + Lookup::erf((x-x0)/(gamma*sqrt(2.))));
 }
 
+double MyModel::loggaussian_int(double x_low, double x_high, double x0, double gamma)
+{
+	double x_diff, first_term, second_factor, second_term;
+	x_diff = x_high - x_low;
+	double gamma_squared = pow(gamma, 2);
+	first_term = 0.5*log(2.*M_PI*gamma_squared)*x_diff;
+	second_factor = 1.0/(2.0 * gamma_squared);
+	second_term = (1.0/3.0)*pow(x_diff, 3.0) - x0*pow(x_diff, 2.0) + pow(x0, 2.0)*x_diff;
+
+	return -first_term - second_factor * second_term;	
+}
+
 template <typename ConstIntType, typename ConstFloatType,
             typename FloatType, typename IndexType, typename UIndexType>
 
@@ -201,8 +213,9 @@ void MyModel::calculate_mu()
 							sh = 1;
 						if ((std::abs(f_right_h[i] - line_pos_shifted[k]) < 5.*width[k]) && 
 						   (std::abs(f_left_h[i] - line_pos_shifted[k]) < 5.*width[k])) 
-							mu_h[i] += sh*amplitude[k]*(gaussian_cdf(f_right_h[i], line_pos_shifted[k], width[k])
-										- gaussian_cdf(f_left_h[i], line_pos_shifted[k], width[k]));
+				//			mu_h[i] += amplitude[k]*sh*loggaussian_int(f_left_h[i], f_right_h[i], line_pos_shifted[k], width[k]);
+							mu_h[i] += sh*amplitude[k]*(gaussian_cdf(f_right_h[i], line_pos_shifted[k], width[k]) - gaussian_cdf(f_left_h[i], line_pos_shifted[k], width[k]));
+				
 					}
 					}
                 		}	 
@@ -236,15 +249,19 @@ void MyModel::calculate_mu()
                                                         sm = 1;
                                                 if ((std::abs(f_right_m[i] - line_pos_shifted[k]) < 5.*width[k]) &&
                                                    (std::abs(f_left_m[i] - line_pos_shifted[k]) < 5.*width[k]))
-                                                        mu_m[i] += sm*amplitude[k]*(gaussian_cdf(f_right_m[i], line_pos_shifted[k], width[k])
-                                                                                - gaussian_cdf(f_left_m[i], line_pos_shifted[k], width[k]));
+                                                //        mu_m[i] += sm*amplitude[k]*loggaussian_int(f_left_m[i], f_right_m[i], line_pos_shifted[k], width[k//]);
+                                                        mu_m[i] += sm*amplitude[k]*(gaussian_cdf(f_right_m[i], line_pos_shifted[k], width[k]) - gaussian_cdf(f_left_m[i], line_pos_shifted[k], width[k]));
+
+
                                                 }
 						}
                                 }
                         }
 
 	}
-   
+  
+
+	double mh, mm;
         // fold through the ARF
         // code taken from sherpa
         for (size_t ii = 0; ii < mu_h.size(); ii++ )
@@ -257,7 +274,7 @@ void MyModel::calculate_mu()
                         mu_hm[ ii ] *= (pha_heg_m.arf.specresp[ ii ] * pha_heg_m.exposure);
 
 		}
- 
+
         for (size_t ii = 0; ii < mu_m.size(); ii++ )
                 {
                         mu_mp[ ii ] = mu_m_bkg[ ii ] + mu_m[ ii ];//exp(log(mu_m_bkg[ ii ]) + mu_m[ ii ]);
@@ -265,7 +282,6 @@ void MyModel::calculate_mu()
 
                         mu_mm[ ii ] = mu_m_bkg[ ii ] + mu_m[ ii ];//exp(log(mu_m_bkg[ ii ]) + mu_m[ ii ]);
                         mu_mm[ ii ] *= (pha_meg_m.arf.specresp[ ii ] * pha_meg_m.exposure);
-
                 }
 
 
